@@ -16,8 +16,16 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title">Diagnostics</h5>
-                     <p>Status: <span class="text-success">Healthy</span></p>
-                    <a href="#" class="btn btn-info text-white">Run Diagnostics</a>
+                     <p>Status: <span id="diagStatus" class="text-success">Healthy</span></p>
+                    <button id="runDiagsBtn" class="btn btn-info text-white">Run Diagnostics</button>
+                    <div id="diagnosticsResult" class="mt-3" style="display:none;">
+                        <div class="alert alert-info">
+                            <strong>Diagnostics Report:</strong>
+                            <table class="table table-sm table-striped mt-2">
+                                <tbody id="diagTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -116,6 +124,61 @@
 
 @section Scripts {
     <script>
+        // Diagnostics functionality
+        document.getElementById('runDiagsBtn').addEventListener('click', async function() {
+            const btn = this;
+            const originalText = btn.textContent;
+            btn.textContent = 'Running...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/ITSupport/RunDiagnostics', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const diagTable = document.getElementById('diagTable');
+                    diagTable.innerHTML = '';
+                    
+                    for (const [key, value] of Object.entries(data.diagnostics)) {
+                        const row = document.createElement('tr');
+                        let displayValue = value;
+                        
+                        if (key === 'Timestamp') {
+                            displayValue = new Date(value).toLocaleString();
+                        } else if (typeof value === 'number') {
+                            displayValue = value.toLocaleString();
+                        }
+                        
+                        row.innerHTML = `<td><strong>${key}:</strong></td><td>${displayValue}</td>`;
+                        diagTable.appendChild(row);
+                    }
+                    
+                    document.getElementById('diagnosticsResult').style.display = 'block';
+                    document.getElementById('diagStatus').textContent = 'Healthy ✅';
+                    document.getElementById('diagStatus').className = 'text-success';
+                } else {
+                    document.getElementById('diagStatus').textContent = 'Error ❌';
+                    document.getElementById('diagStatus').className = 'text-danger';
+                    alert('Diagnostic failed: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('diagStatus').textContent = 'Error ❌';
+                document.getElementById('diagStatus').className = 'text-danger';
+                alert('Failed to run diagnostics');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // Reply modal functionality
         var replyModal = document.getElementById('replyModal');
         replyModal.addEventListener('show.bs.modal', function (event) {
             var button = event.relatedTarget;
