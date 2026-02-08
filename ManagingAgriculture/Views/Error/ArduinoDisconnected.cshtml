@@ -1,0 +1,69 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Arduino Disconnected";
+}
+
+<div class="container py-5">
+    <div class="text-center">
+        <div style="font-size: 100px; margin-bottom: 20px;">⚠️</div>
+        
+        <h1 style="font-size: 36px; color: #ff6b35; margin-bottom: 20px;">Arduino is disconnected</h1>
+        
+        <p style="font-size: 18px; color: #666; margin-bottom: 30px;">
+            Plug it in to see the page.
+        </p>
+        
+        <div style="margin-bottom: 40px; background: #fff8e1; padding: 20px; border-radius: 10px; border-left: 5px solid #ff6b35;">
+            <svg width="300" height="280" viewBox="0 0 300 280" style="max-width: 100%; height: auto;">
+                <!-- Arduino board -->
+                <rect x="50" y="40" width="200" height="140" fill="#1a5490" rx="5"/>
+                <!-- Ports -->
+                <circle cx="70" cy="80" r="5" fill="#FFD700"/>
+                <circle cx="95" cy="80" r="5" fill="#FFD700"/>
+                <circle cx="120" cy="80" r="5" fill="#FFD700"/>
+                <circle cx="145" cy="80" r="5" fill="#FFD700"/>
+                <circle cx="170" cy="80" r="5" fill="#FFD700"/>
+                
+                <!-- USB port -->
+                <rect x="200" y="70" width="20" height="15" fill="#333"/>
+                
+                <!-- Disconnected cable -->
+                <line x1="230" y1="85" x2="270" y2="150" stroke="#E53935" stroke-width="3"/>
+                <path d="M 260 150 Q 270 160 260 170 Q 250 160 260 150" fill="#E53935"/>
+                
+                <!-- Warning symbol -->
+                <circle cx="260" cy="160" r="30" fill="none" stroke="#ff6b35" stroke-width="3"/>
+                <text x="260" y="170" font-size="30" fill="#ff6b35" text-anchor="middle" font-weight="bold">!</text>
+                
+                <!-- Text on board -->
+                <text x="150" y="170" font-size="12" fill="white" text-anchor="middle" font-weight="bold">Arduino Uno</text>
+            </svg>
+        </div>
+        
+        <div style="background: #f3f3f3; padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
+            <h4 style="color: #333; margin-bottom: 15px;">How to fix:</h4>
+            <ol style="color: #555; line-height: 1.8;">
+                <li>Check the USB cable connection to your Arduino device</li>
+                <li>Ensure the Arduino is powered on</li>
+                <li>Try a different USB port on your computer</li>
+                <li>Restart the application</li>
+                <li>Update Arduino drivers if necessary</li>
+            </ol>
+        </div>
+        
+        <div>
+            <a href="javascript:location.reload()" class="btn btn-warning btn-lg" style="margin-right: 10px;">
+                Retry Connection
+            </a>
+            <a href="@Url.Action("Index", "Home")" class="btn btn-secondary btn-lg">
+                Go Home
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #fce4ec 0%, #f3e5f5 100%);
+    }
+</style>

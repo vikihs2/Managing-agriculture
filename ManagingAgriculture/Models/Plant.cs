@@ -36,9 +36,9 @@ namespace ManagingAgriculture.Models
 		[Column(TypeName = "date")]
 		public DateTime PlantedDate { get; set; }
 
-		/// <summary>Expected harvest date</summary>
+		/// <summary>Current date for tracking progress (can be set by user to calculate growth %)</summary>
 		[Column(TypeName = "date")]
-		public DateTime? ExpectedHarvestDate { get; set; }
+		public DateTime? CurrentTrackingDate { get; set; }
 
 		/// <summary>Growth stage percentage (0-100)</summary>
 		[Range(0, 100)]

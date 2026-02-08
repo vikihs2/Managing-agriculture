@@ -16,9 +16,9 @@
         body{font-family: 'Helvetica Neue', Arial, sans-serif;color:#222;background:#fff}
     /* Avoid re-declaring ViewData inside head */
         /* Home-only: Login and Register buttons (boxes use green shades, text is white) */
-        .btn-login{background:var(--accent-green);color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;text-decoration:none}
+        .btn-login{background:var(--accent-green);color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;text-decoration:none;font-size:14px;font-weight:600;transition:background 0.25s ease}
         .btn-login:hover{background:var(--brand-green)}
-        .btn-register{background:var(--brand-green);color:#fff;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;text-decoration:none}
+        .btn-register{background:var(--brand-green);color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;text-decoration:none;font-size:14px;font-weight:600;transition:background 0.25s ease}
         .btn-register:hover{background:var(--brand-green-dark)}
 
         /* Hero */
@@ -39,7 +39,7 @@
         .stat .label{opacity:0.9;margin-top:6px;font-size:12px}
         /* Hero CTA */
         .hero-cta{display:flex;justify-content:center;margin-top:14px;z-index:2;width:100%}
-        .hero-cta a{background:var(--accent-green);color:#fff;border:none;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block}
+        .hero-cta a{background:var(--accent-green);color:#fff;border:none;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;font-size:15px;font-weight:600;transition:background 0.25s ease}
         .hero-cta a:hover{background:var(--brand-green-dark)}
 
         /* Content cards */
@@ -58,9 +58,9 @@
         .cta p{opacity:0.9;margin-bottom:16px}
         .cta .cta-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
         /* CTA: green theme on home (use accent green so it matches Add buttons) */
-        .cta .btn-primary{background:var(--accent-green);border:none;padding:10px 18px;border-radius:6px;color:#fff;text-decoration:none}
+        .cta .btn-primary{background:var(--accent-green);border:none;padding:10px 16px;border-radius:6px;color:#fff;text-decoration:none;font-size:14px}
         .cta .btn-primary:hover{background:var(--brand-green)}
-        .cta .btn-outline{background:#ff9800;border:none;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none}
+        .cta .btn-outline{background:#ff9800;border:none;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-size:14px}
         .cta .btn-outline:hover{background:#c77b0c;color:#fff}
 
         /* hero accent color for last words */
@@ -81,14 +81,20 @@
         .nav-left{display:flex;align-items:center;gap:10px}
         .logo-badge{width:42px;height:42px;border-radius:8px;background:rgba(255,255,255,0.06);display:inline-flex;align-items:center;justify-content:center;font-size:20px}
         .brand{font-weight:700;color:#fff;margin-left:0;display:inline-flex;align-items:center;justify-content:center}
-        .nav-right{display:flex;align-items:center;gap:10px}
-        .btn-login{background:transparent;border:none;color:#fff}
+        .nav-right{display:flex;align-items:center;gap:12px}
+        .btn-login{background:transparent;border:none;color:#fff;font-size:14px;padding:8px 12px;cursor:pointer}
+        .btn-login:hover{background:rgba(255,255,255,0.2);border-radius:6px}
 
-        /* Home page: style Dashboard to match home CTA (only on home) */
+        /* Home page: style Dashboard to match sign out (only on home) */
         .top-nav .nav-right .btn-outline, .top-nav .nav-right .btn-dashboard {
             background: var(--brand-green);
             border-color: var(--brand-green);
             color: #fff;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: background 0.25s ease;
         }
         .top-nav .nav-right .btn-outline:hover, .top-nav .nav-right .btn-dashboard:hover{
             background: var(--brand-green-dark);
@@ -99,10 +105,14 @@
             background: #ff9800; /* orange */
             border: none;
             color: #fff;
-            padding:6px 10px;
-            border-radius:6px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
             outline: none;
             box-shadow: none;
+            cursor: pointer;
+            transition: background 0.25s ease;
         }
         .top-nav .nav-right .btn-signout:hover {
             background: #c77b0c; /* darker orange */
@@ -115,10 +125,10 @@
         .cta p{opacity:0.9;margin-bottom:16px}
         .cta .cta-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
         /* CTA: use accent green for primary buttons (match Add) */
-        .cta .btn-primary{background:var(--accent-green);border:none;padding:10px 18px;border-radius:6px;color:#fff;text-decoration:none}
+        .cta .btn-primary{background:var(--accent-green);border:none;padding:12px 24px;border-radius:8px;color:#fff;text-decoration:none;font-size:15px;font-weight:600;transition:background 0.25s ease}
         .cta .btn-primary:hover{background:var(--brand-green)}
         /* Contact button: same style as Sign out (filled orange) */
-        .cta .btn-outline{background:#ff9800;border:none;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none}
+        .cta .btn-outline{background:#ff9800;border:none;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:600;transition:background 0.25s ease}
         .cta .btn-outline:hover{background:#c77b0c;color:#fff}
 
         /* Footer */
@@ -143,11 +153,16 @@
             .top-nav{height:64px;padding:0 12px}
             .brand{font-size:18px}
             .logo-badge{width:38px;height:38px}
-            .nav-right{gap:6px}
-            .btn-login{padding:6px 10px;font-size:14px}
-            .btn-register{padding:6px 10px;font-size:14px}
+            .nav-right{gap:8px}
+            .btn-login{padding:8px 10px;font-size:12px}
+            .btn-register{padding:8px 10px;font-size:12px}
             .section-title h2{font-size:22px}
             .card h3{font-size:16px}
+            .hero-cta a{padding:10px 16px;font-size:13px}
+            .cta .btn-primary{padding:10px 16px;font-size:13px}
+            .cta .btn-outline{padding:10px 16px;font-size:13px}
+            .top-nav .nav-right .btn-dashboard{padding:8px 12px;font-size:12px}
+            .top-nav .nav-right .btn-signout{padding:8px 12px;font-size:12px}
         }
 
         /* Simple fade-in animation classes (preserved) */
@@ -178,62 +193,18 @@
                         name = char.ToUpper(name[0]) + name.Substring(1);
                     }
                 }
-                <span class="me-3">Welcome @name!</span>
-                <a href="@Url.Action("Index", "Dashboard")"
-   style="
-      display:inline-block;
-      padding:14px 28px;
-      background-color:#74c69d;
-      color:#ffffff;
-      font-weight:600;
-      border-radius:12px;
-      text-decoration:none;
-      transition:all 0.25s ease;
-   "
-   onmouseover="this.style.backgroundColor='#2d6a4f'"
-   onmouseout="this.style.backgroundColor='#74c69d'">
-   Dashboard
-</a>
+                <span style="font-size: 14px; font-weight: 600;">Welcome @name!</span>
+                <a href="@Url.Action("Index", "Dashboard")" class="btn-dashboard">Dashboard</a>
 
-               <form asp-controller="Account"
-      asp-action="Logout"
-      method="post"
-      style="display:inline-block;">
-    @Html.AntiForgeryToken()
-
-    <button type="submit"
-            class="btn btn-signout"
-            style="
-              padding:14px 28px;
-              border-radius:12px;
-              font-weight:600;
-              cursor:pointer;
-              transition:all 0.25s ease;
-            ">
-        Sign out
-    </button>
-</form>
-
+                <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline-block;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-signout">Sign out</button>
+                </form>
             }
             else
             {
-                <a class="btn btn-login me-2" href="@Url.Action("Login","Account")">Login</a>
-                <a href="@Url.Action("Register","Account")"
-   style="
-     display:inline-block;
-     padding:14px 28px;
-     background:#74c69d;
-     color:#fff;
-     border-radius:12px;
-     text-decoration:none;
-     font-weight:600;
-     transition:background 0.25s ease;
-   "
-   onmouseover="this.style.background='#2d6a4f'"
-   onmouseout="this.style.background='#74c69d'">
-    Register
-</a>
-
+                <a class="btn btn-login" href="@Url.Action("Login","Account")">Login</a>
+                <a class="btn btn-register" href="@Url.Action("Register","Account")">Register</a>
             }
         </div>
     </nav>
@@ -242,7 +213,6 @@
         <div class="hero-inner fade-in">
             <h1>Smarter Farming for <span style="color:#74c69d;">Better Yields</span></h1>
             <p>Manage your crops, resources and machinery in one simple platform. Track field conditions, irrigation, supplies, and daily farm operations.</p>
-            <!-- Hero CTA removed per user request (hero buttons moved to CTA strip below) -->
         </div>
 
         <div class="stats fade-in" style="animation-delay:200ms">
@@ -260,23 +230,15 @@
             </div>
         </div>
         <div class="hero-cta fade-in" style="animation-delay:320ms;">
-    <a href="@Url.Action("Register","Account")"
-       style="
-         display:inline-block;
-         padding:14px 28px;
-         background:#74c69d;
-         color:#fff;
-         border-radius:12px;
-         text-decoration:none;
-         font-weight:600;
-         transition:background 0.25s ease;
-       "
-       onmouseover="this.style.background='#2d6a4f'"
-       onmouseout="this.style.background='#74c69d'">
-        Start Tracking Now
-    </a>
-</div>
-
+            @if (User?.Identity?.IsAuthenticated == true)
+            {
+                <a href="@Url.Action("Index", "Plants")">Start Tracking Now</a>
+            }
+            else
+            {
+                <a href="@Url.Action("Register", "Account")">Start Tracking Now</a>
+            }
+        </div>
     </header>
 
     <section class="content-section">
@@ -323,35 +285,15 @@
         <h2>Ready to Simplify Your Farm Operations?</h2>
         <p>Join thousands of farmers who trust our platform to manage their daily work, track resources, and grow their yields.</p>
         <div class="cta-actions">
-            <a href="@Url.Action("Register","Account")"
-   class="btn-primary"
-   style="
-     display:inline-block;
-     padding:14px 28px;
-     background:#74c69d;
-     color:#ffffff;
-     border-radius:12px;
-     text-decoration:none;
-     font-weight:600;
-     transition:background 0.25s ease;
-   "
-   onmouseover="this.style.background='#2d6a4f'"
-   onmouseout="this.style.background='#74c69d'">
-    Start Tracking Now
-</a>
-            <a href="@Url.Action("Contact","Home")"
-   class="btn-outline"
-   style="
-     display:inline-block;
-     padding:14px 28px;
-     border-radius:12px;
-     font-weight:600;
-     text-decoration:none;
-     transition:all 0.25s ease;
-   ">
-    Contact Us
-</a>
-
+            @if (User?.Identity?.IsAuthenticated == true)
+            {
+                <a href="@Url.Action("Index", "Plants")" class="btn-primary">Start Tracking Now</a>
+            }
+            else
+            {
+                <a href="@Url.Action("Register", "Account")" class="btn-primary">Start Tracking Now</a>
+            }
+            <a href="@Url.Action("Contact", "Home")" class="btn-outline">Contact Us</a>
         </div>
     </section>
 
@@ -364,10 +306,10 @@
             <div class="footer-col">
                 <h4>Quick Links</h4>
                 <p>
-                    <a href="@Url.Action("Register","Account")">Dashboard</a><br />
-                    <a href="@Url.Action("Register","Account")">Marketplace</a><br />
-                    <a href="@Url.Action("Register","Account")">Resources</a><br />
-                    <a href="@Url.Action("Register","Account")">Support</a>
+                    <a href="@Url.Action("Index", "Dashboard")">Dashboard</a><br />
+                    <a href="@Url.Action("Index", "Marketplace")">Marketplace</a><br />
+                    <a href="@Url.Action("Index", "Resources")">Resources</a><br />
+                    <a href="@Url.Action("Contact", "Home")">Support</a>
                 </p>
             </div>
             <div class="footer-col">

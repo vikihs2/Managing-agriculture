@@ -44,7 +44,7 @@ using (var scope = app.Services.CreateScope())
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 
@@ -53,6 +53,9 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add status code handling
+app.UseStatusCodePagesWithReExecute("/Error/{0}");
 
 app.MapStaticAssets();
 

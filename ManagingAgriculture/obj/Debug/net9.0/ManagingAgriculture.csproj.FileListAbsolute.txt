@@ -234,4 +234,5 @@ C:\Users\Viktor\Desktop\diplomna.rabota\managingAgriculture\Managing-agriculture
 C:\Users\Viktor\Desktop\diplomna.rabota\managingAgriculture\Managing-agriculture\ManagingAgriculture\bin\Debug\net9.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
 C:\Users\Viktor\Desktop\diplomna.rabota\managingAgriculture\Managing-agriculture\ManagingAgriculture\bin\Debug\net9.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
 C:\Users\Viktor\Desktop\diplomna.rabota\managingAgriculture\Managing-agriculture\ManagingAgriculture\bin\Debug\net9.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
-C:\Users\Viktor\Desktop\diplomna.rabota\managingAgriculture\Managing-agriculture\ManagingAgriculture\obj\Debug\net9.0\compressed\o22admou70-cxjdh3umvh.gz
+C:\Users\Viktor\Desktop\diplomna.rabota\managingAgriculture\Managing-agriculture\ManagingAgriculture\obj\Debug\net9.0\compressed\o22admou70-ptg9mc1six.gz
+C:\Users\Viktor\Desktop\diplomna.rabota\managingAgriculture\Managing-agriculture\ManagingAgriculture\obj\Debug\net9.0\compressed\jjh5ob02p1-tp9iax9kga.gz

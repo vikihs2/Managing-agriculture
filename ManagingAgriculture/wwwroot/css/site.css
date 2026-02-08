@@ -20,6 +20,92 @@
   --home-layer-bottom: #1c1711;
 }
 
+/* Dark Theme Variables */
+[data-theme="dark"] {
+  --primary-color: #52b788;
+  --secondary-color: #95d5b2;
+  --light-bg: #1a1a1a;
+  --card-bg: #2d2d2d;
+  --text-primary: #e8e8e8;
+  --text-secondary: #b0b0b0;
+  --border-color: #404040;
+  --alert-color: #ff9800;
+  --accent-green: #74c69d;
+  --brand-green: #52b788;
+  --brand-green-dark: #40916c;
+  --home-layer-upper: #2d6a4f;
+  --home-layer-bottom: #0d1b12;
+}
+
+/* Dark mode specific adjustments */
+[data-theme="dark"] body {
+  background-color: var(--light-bg);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .sidebar {
+  background-color: #1f1f1f;
+  border-right: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .top-header {
+  background-color: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .plant-card,
+[data-theme="dark"] .resource-card,
+[data-theme="dark"] .machinery-card,
+[data-theme="dark"] .marketplace-card {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+  background-color: #1a1a1a;
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: #888;
+}
+
+[data-theme="dark"] .table {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .modal-content {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .dropdown-menu {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .dropdown-item {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+
 /* Override Bootstrap success button to match brand green */
 .btn-success,
 .btn-post,

@@ -11,6 +11,35 @@
         </div>
         <div class="card-body">
             
+            @if (ViewBag.PlantStatus != null)
+            {
+                <div class="alert @(ViewBag.PlantStatus.Contains("Healthy") ? "alert-success" : ViewBag.PlantStatus.Contains("Stressed") ? "alert-warning" : "alert-danger")">
+                    <strong>Plant Health Status: @ViewBag.PlantStatus</strong>
+                </div>
+            }
+
+            @if (ViewBag.RecommendedSoil != null)
+            {
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">📋 Recommended Conditions for @Model.CropType</h6>
+                    <hr class="my-2" />
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <strong>🌱 Soil:</strong> @ViewBag.RecommendedSoil
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>☀️ Sunlight:</strong> @ViewBag.RecommendedSunlight
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>🌡️ Temperature:</strong> @ViewBag.RecommendedTemperature
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>💧 Watering:</strong> @ViewBag.RecommendedWater
+                        </div>
+                    </div>
+                </div>
+            }
+
             @if (ViewBag.AlgorithmScore != null)
             {
                 <div class="alert @(ViewBag.AlgorithmScore >= 80 ? "alert-success" : ViewBag.AlgorithmScore >= 50 ? "alert-warning" : "alert-danger")">
@@ -19,7 +48,7 @@
                 </div>
             }
 
-            <form asp-action="Edit" asp-route-id="@ViewBag.Id" method="post">
+            <form asp-action="Edit" asp-route-id="@ViewBag.Id" method="post" id="editPlantForm">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -31,8 +60,7 @@
                     </div>
                 
                     <div class="col-md-6 mb-3">
-                        <label asp-for="CropType" class="form-label fw-bold"></label>
-                        <!-- Searchable Dropdown using Datalist -->
+                        <label asp-for="CropType" class="form-label fw-bold">Crop Type</label>
                         <input asp-for="CropType" list="cropList" class="form-control" placeholder="Type to search crop..." />
                         <datalist id="cropList">
                             @if(ViewBag.CropCategories != null)
@@ -42,7 +70,7 @@
                                     <optgroup label="@category.Key">
                                         @foreach(var crop in category.Value)
                                         {
-                                            <option value="@crop">@category.Key - @crop</option>
+                                            <option value="@crop">@crop</option>
                                         }
                                     </optgroup>
                                 }
@@ -55,36 +83,36 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label asp-for="PlantedDate" class="form-label"></label>
-                        <input asp-for="PlantedDate" class="form-control" type="date" />
+                        <input asp-for="PlantedDate" class="form-control" type="date" onchange="updateGrowthDisplay()" />
                         <span asp-validation-for="PlantedDate" class="text-danger"></span>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label asp-for="ExpectedHarvest" class="form-label"></label>
-                        <input asp-for="ExpectedHarvest" class="form-control" type="date" />
-                        <span asp-validation-for="ExpectedHarvest" class="text-danger"></span>
+                        <label asp-for="CurrentTrackingDate" class="form-label"></label>
+                        <input asp-for="CurrentTrackingDate" class="form-control" type="date" onchange="updateGrowthDisplay()" />
+                        <small class="form-text text-muted">Leave empty for today's date</small>
+                        <span asp-validation-for="CurrentTrackingDate" class="text-danger"></span>
                     </div>
                 </div>
-                
-                <!-- Growth Stage is now calculated, but maybe user wants to see it or override? 
-                     User said: "growth stage % just if you start tracking it after you planted it otherwise its 0%".
-                     Controller calculates it. Let's make it ReadOnly or display only. -->
-                <div class="mb-3">
-                    <label class="form-label">Current Growth Stage (Calculated)</label>
-                    <div class="progress" style="height: 25px;">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: @Model.GrowthStage%;" aria-valuenow="@Model.GrowthStage" aria-valuemin="0" aria-valuemax="100">@Model.GrowthStage%</div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Current Growth Stage (%)</label>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: @Model.GrowthStage%;" aria-valuenow="@Model.GrowthStage" aria-valuemin="0" aria-valuemax="100">@Model.GrowthStage%</div>
+                        </div>
+                        <input type="hidden" asp-for="GrowthStage" id="growthStageValue" />
                     </div>
-                    <input type="hidden" asp-for="GrowthStage" />
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="NextTask" class="form-label">Next Task (View Only / Memo)</label>
-                    <input asp-for="NextTask" class="form-control" />
+                    <label asp-for="NextTask" class="form-label">Next Task (Memo)</label>
+                    <input asp-for="NextTask" class="form-control" placeholder="e.g. Water plants, Apply fertilizer" />
                     <span asp-validation-for="NextTask" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Notes" class="form-label">Notes (View Only / Memo)</label>
-                    <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                    <label asp-for="Notes" class="form-label">Notes (Memo)</label>
+                    <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Additional observations..."></textarea>
                     <span asp-validation-for="Notes" class="text-danger"></span>
                 </div>
 
@@ -94,7 +122,7 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label asp-for="SoilType" class="form-label">Soil Type</label>
-                        <select asp-for="SoilType" class="form-select">
+                        <select asp-for="SoilType" class="form-select" onchange="updateGrowthDisplay()">
                             <option value="">Select Soil...</option>
                             <option value="Clay">Clay</option>
                             <option value="Sandy">Sandy</option>
@@ -106,7 +134,7 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label asp-for="SunlightExposure" class="form-label">Sunlight</label>
-                        <select asp-for="SunlightExposure" class="form-select">
+                        <select asp-for="SunlightExposure" class="form-select" onchange="updateGrowthDisplay()">
                             <option value="">Select Exposure...</option>
                             <option value="Full Sun">Full Sun (6+ hrs)</option>
                             <option value="Partial Sun">Partial Sun (3-6 hrs)</option>
@@ -116,7 +144,7 @@
                     </div>
                     <div class="col-md-4 mb-3 d-flex align-items-end">
                         <div class="form-check mb-2">
-                            <input asp-for="IsIndoor" class="form-check-input" type="checkbox" />
+                            <input asp-for="IsIndoor" class="form-check-input" type="checkbox" onchange="updateGrowthDisplay()" />
                             <label asp-for="IsIndoor" class="form-check-label">Is Indoor Plant?</label>
                         </div>
                     </div>
@@ -125,11 +153,11 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label asp-for="AvgTemperatureCelsius" class="form-label">Avg Temp (°C) (-50 to 60)</label>
-                        <input asp-for="AvgTemperatureCelsius" class="form-control" type="number" step="0.1" />
+                        <input asp-for="AvgTemperatureCelsius" class="form-control" type="number" step="0.1" onchange="updateGrowthDisplay()" />
                     </div>
                     <div class="col-md-6 mb-3">
                          <label asp-for="WateringFrequencyDays" class="form-label">Watering Freq (Days)</label>
-                         <input asp-for="WateringFrequencyDays" class="form-control" type="number" />
+                         <input asp-for="WateringFrequencyDays" class="form-control" type="number" onchange="updateGrowthDisplay()" />
                     </div>
                 </div>
 
@@ -145,4 +173,20 @@
 @section Scripts {
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        function updateGrowthDisplay() {
+            // Client-side display only - real calculation happens on server
+            const plantedDate = new Date(document.querySelector('input[name="PlantedDate"]').value);
+            const currentDate = new Date(document.querySelector('input[name="CurrentTrackingDate"]').value);
+            
+            if (!plantedDate || !currentDate || plantedDate > currentDate) {
+                return;
+            }
+            
+            const elapsed = (currentDate - plantedDate) / (1000 * 60 * 60 * 24);
+            const estimatedGrowth = Math.min(Math.round((elapsed / 90) * 100), 100);
+            
+            document.getElementById('growthStageValue').value = estimatedGrowth;
+        }
+    </script>
 }

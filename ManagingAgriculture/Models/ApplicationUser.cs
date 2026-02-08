@@ -20,5 +20,8 @@ namespace ManagingAgriculture.Models
 
         public int LeaveDaysTotal { get; set; } = 20; // Default 20
         public int LeaveDaysUsed { get; set; }
+        
+        // Theme Preference
+        public string? ThemePreference { get; set; } = "light"; // "light" or "dark"
     }
 }

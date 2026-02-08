@@ -1,0 +1,38 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Error";
+}
+
+<div class="container py-5">
+    <div class="text-center">
+        <div style="font-size: 80px; color: #dc3545; margin-bottom: 20px;">⚠️</div>
+        
+        <h1 style="font-size: 36px; color: #dc3545; margin-bottom: 20px;">Something went wrong</h1>
+        
+        <p style="font-size: 18px; color: #666; margin-bottom: 30px;">
+            We encountered an error. Please try again later or contact support if the problem persists.
+        </p>
+        
+        @if (ViewBag.StatusCode != null)
+        {
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 30px; color: #666;">
+                <strong>Error Code:</strong> @ViewBag.StatusCode
+            </div>
+        }
+        
+        <div>
+            <a href="@Url.Action("Index", "Home")" class="btn btn-primary btn-lg" style="margin-right: 10px;">
+                Go to Homepage
+            </a>
+            <a href="javascript:history.back()" class="btn btn-secondary btn-lg">
+                Go Back
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
+    }
+</style>

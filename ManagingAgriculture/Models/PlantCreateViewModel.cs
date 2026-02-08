@@ -19,13 +19,13 @@ namespace ManagingAgriculture.Models
         [Display(Name = "Planted Date")]
         public DateTime PlantedDate { get; set; }
 
+        [DataType(DataType.Date)]
+        [Display(Name = "Current Date")]
+        public DateTime? CurrentTrackingDate { get; set; }
+
         [Range(0, 100)]
         [Display(Name = "Growth Stage (%)")]
         public int GrowthStage { get; set; }
-
-        [DataType(DataType.Date)]
-        [Display(Name = "Expected Harvest")]
-        public DateTime? ExpectedHarvest { get; set; }
 
         [StringLength(200)]
         [Display(Name = "Next Task")]

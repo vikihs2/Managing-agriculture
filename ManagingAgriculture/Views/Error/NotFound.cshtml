@@ -1,0 +1,44 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Page Not Found";
+}
+
+<div class="container py-5">
+    <div class="text-center">
+        <div style="font-size: 120px; color: #2d6a4f; font-weight: bold; margin-bottom: 20px;">404</div>
+        
+        <h1 style="font-size: 36px; color: #2d6a4f; margin-bottom: 20px;">This field is empty</h1>
+        
+        <p style="font-size: 18px; color: #666; margin-bottom: 30px;">
+            Looks like the page you're looking for couldn't be found. It may have been moved, harvested, or never planted at all.
+        </p>
+        
+        <div style="margin-bottom: 40px;">
+            <svg width="300" height="250" viewBox="0 0 300 250" style="max-width: 100%; height: auto;">
+                <!-- Simplified farm scene SVG -->
+                <rect x="0" y="180" width="300" height="70" fill="#8B7355"/>
+                <rect x="20" y="120" width="60" height="60" fill="#CD5C5C"/>
+                <rect x="35" y="120" width="5" height="70" fill="#8B4513"/>
+                <circle cx="120" cy="100" r="50" fill="#FFD700"/>
+                <rect x="200" y="150" width="80" height="10" fill="#8B4513"/>
+                <circle cx="220" cy="150" r="15" fill="#FF6347"/>
+                <circle cx="260" cy="150" r="15" fill="#FF6347"/>
+            </svg>
+        </div>
+        
+        <div>
+            <a href="@Url.Action("Index", "Home")" class="btn btn-success btn-lg" style="margin-right: 10px;">
+                Go to Homepage
+            </a>
+            <a href="@Url.Action("Contact", "Home")" class="btn btn-warning btn-lg">
+                Contact Support
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+    }
+</style>

@@ -50,7 +50,8 @@ namespace ManagingAgriculture.Controllers
         {
             ViewData["Title"] = "Add Plant";
             ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
-            return View(new PlantCreateViewModel { PlantedDate = System.DateTime.Today });
+            var today = System.DateTime.Today;
+            return View(new PlantCreateViewModel { PlantedDate = today, CurrentTrackingDate = today });
         }
 
         [HttpPost]
@@ -64,20 +65,30 @@ namespace ManagingAgriculture.Controllers
             }
 
             var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
             
-            // Calculate Growth % automatically based on dates if user didn't specify or simplified logic
-            int timeGrowth = _cropService.CalculateTimeProgress(model.PlantedDate, model.ExpectedHarvest);
-            // We use the calculated time growth, unless user manually overrides (but here we just take the calc for consistency)
-            // Or we respect user input if it's not 0? Let's obey the user request: "growth stage % just if you start tracking it after you planted it otherwise its 0%"
-            // If PlantedDate is today, it's 0. If PlantedDate was last month, it's X%.
+            // Use CurrentTrackingDate if provided, otherwise use today
+            var trackingDate = model.CurrentTrackingDate ?? System.DateTime.Today;
+            
+            // Calculate Growth % using the new algorithm
+            int growthPercent = _cropService.CalculateGrowthPercentage(
+                model.PlantedDate,
+                trackingDate,
+                model.CropType,
+                model.SoilType ?? "",
+                model.AvgTemperatureCelsius,
+                model.IsIndoor,
+                model.WateringFrequencyDays,
+                model.SunlightExposure ?? ""
+            );
             
             var plant = new Plant
             {
                 Name = model.Name,
                 PlantType = model.CropType,
                 PlantedDate = model.PlantedDate,
-                ExpectedHarvestDate = model.ExpectedHarvest,
-                GrowthStagePercent = timeGrowth, // Use calculated growth
+                CurrentTrackingDate = trackingDate,
+                GrowthStagePercent = growthPercent,
                 NextTask = model.NextTask,
                 Notes = model.Notes,
                 SoilType = model.SoilType,
@@ -100,12 +111,9 @@ namespace ManagingAgriculture.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            // RBAC Check: Employee cannot Edit. Manager cannot Edit. Only Boss (or Admin? Assume Boss).
-            // Actually, if personal account (no company), user is owner so they can edit.
-            // If Company: "manager can add but not edit or delete" + "employee cant add, edit and delete".
-            // So only "Boss" can Edit company plants? Or "SystemAdmin"? Let's assume Boss.
-            
             var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
             var plant = await _context.Plants.FindAsync(id);
 
             if (plant == null) return NotFound();
@@ -134,7 +142,7 @@ namespace ManagingAgriculture.Controllers
                 Name = plant.Name,
                 CropType = plant.PlantType,
                 PlantedDate = plant.PlantedDate,
-                ExpectedHarvest = plant.ExpectedHarvestDate,
+                CurrentTrackingDate = plant.CurrentTrackingDate,
                 GrowthStage = plant.GrowthStagePercent,
                 NextTask = plant.NextTask,
                 Notes = plant.Notes,
@@ -148,9 +156,16 @@ namespace ManagingAgriculture.Controllers
             ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
             ViewBag.Id = plant.Id;
             
-            var (score, msg) = _cropService.CalculateGrowthSuitability(plant.PlantType, plant.SoilType, plant.AvgTemperatureCelsius, plant.IsIndoor, plant.WateringFrequencyDays, plant.SunlightExposure);
-            ViewBag.AlgorithmScore = score;
-            ViewBag.AlgorithmMessage = msg;
+            // Get crop recommendations
+            var (recSoil, recSun, recTemp, recWater) = _cropService.GetCropRecommendations(plant.PlantType);
+            ViewBag.RecommendedSoil = recSoil;
+            ViewBag.RecommendedSunlight = recSun;
+            ViewBag.RecommendedTemperature = recTemp;
+            ViewBag.RecommendedWater = recWater;
+            
+            // Get plant health status
+            var healthStatus = _cropService.GetPlantStatus(plant.GrowthStagePercent, plant.PlantedDate, System.DateTime.Today);
+            ViewBag.PlantStatus = healthStatus;
 
             return View(model);
         }
@@ -166,6 +181,8 @@ namespace ManagingAgriculture.Controllers
             }
 
             var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
             var plant = await _context.Plants.FindAsync(id);
 
             if (plant == null) return NotFound();
@@ -185,13 +202,26 @@ namespace ManagingAgriculture.Controllers
                 if (plant.OwnerUserId != user.Id) return Forbid();
             }
             
-            int timeGrowth = _cropService.CalculateTimeProgress(model.PlantedDate, model.ExpectedHarvest);
+            // Use CurrentTrackingDate if provided, otherwise use today
+            var trackingDate = model.CurrentTrackingDate ?? System.DateTime.Today;
+            
+            // Calculate growth % using the new algorithm
+            int growthPercent = _cropService.CalculateGrowthPercentage(
+                model.PlantedDate,
+                trackingDate,
+                model.CropType,
+                model.SoilType ?? "",
+                model.AvgTemperatureCelsius,
+                model.IsIndoor,
+                model.WateringFrequencyDays,
+                model.SunlightExposure ?? ""
+            );
 
             plant.Name = model.Name;
             plant.PlantType = model.CropType;
             plant.PlantedDate = model.PlantedDate;
-            plant.ExpectedHarvestDate = model.ExpectedHarvest;
-            plant.GrowthStagePercent = timeGrowth;
+            plant.CurrentTrackingDate = trackingDate;
+            plant.GrowthStagePercent = growthPercent;
             plant.NextTask = model.NextTask;
             plant.Notes = model.Notes;
             plant.SoilType = model.SoilType;
@@ -212,6 +242,8 @@ namespace ManagingAgriculture.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
             var plant = await _context.Plants.FindAsync(id);
             if (plant != null)
             {
