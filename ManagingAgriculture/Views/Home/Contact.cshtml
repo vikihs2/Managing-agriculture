@@ -82,17 +82,6 @@
                                 @if (TempData["ContactError"] != null) {
                                     <div class="alert alert-danger">@TempData["ContactError"]</div>
                                 }
-                                @if (ViewBag.SmtpConfigured == false)
-                                {
-                                    <div class="alert alert-warning">Email sending is not configured on this server. To enable sending to <strong>victor.stefanov.highschool@buditel.bg</strong>, add SMTP settings to <code>appsettings.json</code> (Smtp:Host, Username, Password, etc.).</div>
-                                }
-                                else
-                                {
-                                    <form asp-action="TestSmtp" method="post" style="display:inline-block;margin-top:8px;">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-outline-secondary">Send test email to victor.stefanov.highschool@buditel.bg</button>
-                                    </form>
-                                }
                         <form asp-action="Contact" method="post">
                             @Html.AntiForgeryToken()
                             <div class="mb-3">

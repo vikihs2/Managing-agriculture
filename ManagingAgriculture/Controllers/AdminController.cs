@@ -10,7 +10,6 @@ using System.Collections.Generic;
 
 namespace ManagingAgriculture.Controllers
 {
-    [Authorize(Roles = "SystemAdmin")]
     public class AdminController : Controller
     {
         private readonly ManagingAgriculture.Data.ApplicationDbContext _context;
@@ -26,9 +25,22 @@ namespace ManagingAgriculture.Controllers
             _roleManager = roleManager;
         }
 
+        // Check authorization for all actions
+        private async Task<bool> IsUserAdminAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return false;
+            return await _userManager.IsInRoleAsync(user, "SystemAdmin");
+        }
+
         // 1. Dashboard
+        [Authorize]
         public async Task<IActionResult> Index()
         {
+            // Check if user is admin
+            if (!await IsUserAdminAsync())
+                return StatusCode(403);
+
             var model = new AdminDashboardViewModel
             {
                 TotalUsers = await _userManager.Users.CountAsync(),
@@ -52,8 +64,12 @@ namespace ManagingAgriculture.Controllers
         }
 
         // 2. User Management
+        [Authorize]
         public async Task<IActionResult> Users(string search, string filterRole)
         {
+            if (!await IsUserAdminAsync())
+                return StatusCode(403);
+
             var query = _userManager.Users.AsQueryable();
 
             if (!string.IsNullOrEmpty(search))
@@ -99,8 +115,12 @@ namespace ManagingAgriculture.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> ToggleUserStatus(string id)
         {
+            if (!await IsUserAdminAsync())
+                return StatusCode(403);
+
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
@@ -117,8 +137,12 @@ namespace ManagingAgriculture.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> ChangeUserRole(string id, string newRole)
         {
+            if (!await IsUserAdminAsync())
+                return StatusCode(403);
+
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
@@ -130,8 +154,11 @@ namespace ManagingAgriculture.Controllers
         }
 
         // 3. Company Overview
+        [Authorize]
         public async Task<IActionResult> Companies()
         {
+            if (!await IsUserAdminAsync())
+                return StatusCode(403);
             var companies = await _context.Companies.ToListAsync();
             var model = new List<CompanyOverviewViewModel>();
 
@@ -154,21 +181,31 @@ namespace ManagingAgriculture.Controllers
         }
 
         // 4. Contact Messages & Reports
+        [Authorize]
         public async Task<IActionResult> Messages()
         {
+            if (!await IsUserAdminAsync())
+                return StatusCode(403);
             var messages = await _context.ContactForms.OrderByDescending(m => m.CreatedDate).ToListAsync();
             return View(messages);
         }
 
+        [Authorize]
         public IActionResult Reports()
         {
+            if (!User.IsInRole("SystemAdmin"))
+                return StatusCode(403);
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> ReplyToMessage(int id, string replyContent)
         {
+            if (!await IsUserAdminAsync())
+                return StatusCode(403);
+
             var msg = await _context.ContactForms.FindAsync(id);
             if (msg != null)
             {
