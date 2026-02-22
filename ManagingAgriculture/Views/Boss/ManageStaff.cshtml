@@ -85,51 +85,51 @@
                             </td>
                             
                             <!-- Update Form -->
-                            <form asp-action="UpdateEmployeeDetails" method="post">
+                            <form id="form_@staff.Id" asp-action="UpdateEmployeeDetails" method="post" style="display:none;">
                                 <input type="hidden" name="userId" value="@staff.Id" />
-                                <td>
-                                    <div class="input-group input-group-sm mb-1" style="width: 150px;">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" name="salary" class="form-control" value="@staff.Salary" step="0.01">
-                                    </div>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" name="isSalaryPaid" value="true" @(staff.IsSalaryPaidInfo ? "checked" : "")>
-                                        <label class="form-check-label small">Paid?</label>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="input-group input-group-sm" style="width: 140px;">
-                                        <span class="input-group-text">@staff.LeaveDaysUsed /</span>
-                                        <input type="number" name="leaveDays" class="form-control" value="@staff.LeaveDaysTotal">
-                                    </div>
-                                    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" onclick="openLeaveCalendar('@staff.Id', '@staff.UserName')">
-                                        <i class="far fa-calendar-alt"></i> Manage Leave
-                                    </button>
-                                </td>
-                                <td>
-                                    <div class="d-flex flex-column gap-1">
-                                        <div class="btn-group btn-group-sm">
-                                            <button type="submit" class="btn btn-primary" title="Save Changes"><i class="fas fa-save"></i></button>
-                                            <button type="button" class="btn btn-secondary" onclick="openTaskModal('@staff.Id', '@staff.UserName')" title="Manage Tasks">
-                                                <i class="fas fa-tasks"></i> Tasks
-                                            </button>
-                                        </div>
-                                        
-                                        <div class="btn-group btn-group-sm">
-                                            @if (role == "Employee")
-                                            {
-                                                <button type="submit" formaction="@Url.Action("PromoteStaff")" name="newRole" value="Manager" class="btn btn-outline-warning text-dark">Promote</button>
-                                            }
-                                            else if (role == "Manager")
-                                            {
-                                                <!-- Demote Button -->
-                                                <button type="submit" formaction="@Url.Action("DemoteStaff")" class="btn btn-outline-secondary">Demote</button>
-                                            }
-                                            <button type="submit" formaction="@Url.Action("RemoveStaff")" class="btn btn-danger" onclick="return confirm('Are you sure?');"><i class="fas fa-trash"></i></button>
-                                        </div>
-                                    </div>
-                                </td>
                             </form>
+                            <td>
+                                <div class="input-group input-group-sm mb-1" style="width: 150px;">
+                                    <span class="input-group-text">$</span>
+                                    <input form="form_@staff.Id" type="number" name="salary" class="form-control" value="@staff.Salary" step="0.01">
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input form="form_@staff.Id" class="form-check-input" type="checkbox" name="isSalaryPaid" value="true" @(staff.IsSalaryPaidInfo ? "checked" : "")>
+                                    <label class="form-check-label small">Paid?</label>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="input-group input-group-sm" style="width: 140px;">
+                                    <span class="input-group-text">@staff.LeaveDaysUsed /</span>
+                                    <input form="form_@staff.Id" type="number" name="leaveDays" class="form-control" value="@staff.LeaveDaysTotal">
+                                </div>
+                                <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" onclick="openLeaveCalendar('@staff.Id', '@staff.UserName')">
+                                    <i class="far fa-calendar-alt"></i> Manage Leave
+                                </button>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    <div class="btn-group btn-group-sm">
+                                        <button form="form_@staff.Id" type="submit" class="btn btn-primary" title="Save Changes"><i class="fas fa-save"></i></button>
+                                        <button type="button" class="btn btn-secondary" onclick="openTaskModal('@staff.Id', '@staff.UserName')" title="Manage Tasks">
+                                            <i class="fas fa-tasks"></i> Tasks
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="btn-group btn-group-sm">
+                                        @if (role == "Employee")
+                                        {
+                                            <button form="form_@staff.Id" type="submit" formaction="@Url.Action("PromoteStaff")" name="newRole" value="Manager" class="btn btn-outline-warning text-dark">Promote</button>
+                                        }
+                                        else if (role == "Manager")
+                                        {
+                                            <!-- Demote Button -->
+                                            <button form="form_@staff.Id" type="submit" formaction="@Url.Action("DemoteStaff")" class="btn btn-outline-secondary">Demote</button>
+                                        }
+                                        <button form="form_@staff.Id" type="submit" formaction="@Url.Action("RemoveStaff")" class="btn btn-danger" onclick="return confirm('Are you sure?');"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </div>
+                            </td>
                         </tr>
                     }
                 </tbody>

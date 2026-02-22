@@ -34,12 +34,14 @@ namespace ManagingAgriculture.Controllers
             
             var query = _context.Resources.AsQueryable();
 
+            // If user belongs to a company, show only company resources
             if (user.CompanyId != null)
             {
-                 query = query.Where(r => r.CompanyId == user.CompanyId || (r.CompanyId == null && r.OwnerUserId == user.Id));
+                 query = query.Where(r => r.CompanyId == user.CompanyId);
             }
             else
             {
+                // If freelancer, show only their own resources
                  query = query.Where(r => r.OwnerUserId == user.Id);
             }
             

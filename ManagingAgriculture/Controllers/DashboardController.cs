@@ -26,7 +26,7 @@ namespace ManagingAgriculture.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
-            IQueryable<ManagingAgriculture.Models.Plant> plantsQuery = _context.Plants;
+            IQueryable<ManagingAgriculture.Models.Plant> plantsQuery = _context.Plants.Include(p => p.Field);
             IQueryable<ManagingAgriculture.Models.Resource> resourcesQuery = _context.Resources;
             IQueryable<ManagingAgriculture.Models.Machinery> machineryQuery = _context.Machinery;
 

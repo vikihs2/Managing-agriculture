@@ -224,6 +224,69 @@ namespace ManagingAgriculture.Migrations
                     b.ToTable("ContactForms");
                 });
 
+            modelBuilder.Entity("ManagingAgriculture.Models.Field", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AverageTemperatureCelsius")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CurrentPlantId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsOccupied")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("OwnerUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("SizeInDecars")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("SoilType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("SunlightExposure")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("CurrentPlantId")
+                        .IsUnique()
+                        .HasFilter("[CurrentPlantId] IS NOT NULL");
+
+                    b.ToTable("Fields");
+                });
+
             modelBuilder.Entity("ManagingAgriculture.Models.LeaveRecord", b =>
                 {
                     b.Property<int>("Id")
@@ -424,9 +487,6 @@ namespace ManagingAgriculture.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal?>("AvgTemperatureCelsius")
-                        .HasColumnType("decimal(5,2)");
-
                     b.Property<int?>("CompanyId")
                         .HasColumnType("int");
 
@@ -435,6 +495,9 @@ namespace ManagingAgriculture.Migrations
 
                     b.Property<DateTime?>("CurrentTrackingDate")
                         .HasColumnType("date");
+
+                    b.Property<int?>("FieldId")
+                        .HasColumnType("int");
 
                     b.Property<int>("GrowthStagePercent")
                         .HasColumnType("int");
@@ -469,18 +532,10 @@ namespace ManagingAgriculture.Migrations
                     b.Property<DateTime>("PlantedDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("SoilType")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("SunlightExposure")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime2");
@@ -491,6 +546,8 @@ namespace ManagingAgriculture.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
+
+                    b.HasIndex("FieldId");
 
                     b.ToTable("Plants");
                 });
@@ -662,6 +719,9 @@ namespace ManagingAgriculture.Migrations
                     b.Property<DateTime>("AssignedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("AssignedMachineryId")
+                        .HasColumnType("int");
+
                     b.Property<string>("AssignedToUserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -683,6 +743,8 @@ namespace ManagingAgriculture.Migrations
                         .HasColumnType("bit");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AssignedMachineryId");
 
                     b.HasIndex("AssignedToUserId");
 
@@ -842,6 +904,22 @@ namespace ManagingAgriculture.Migrations
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("ManagingAgriculture.Models.Field", b =>
+                {
+                    b.HasOne("ManagingAgriculture.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId");
+
+                    b.HasOne("ManagingAgriculture.Models.Plant", "CurrentPlant")
+                        .WithOne()
+                        .HasForeignKey("ManagingAgriculture.Models.Field", "CurrentPlantId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Company");
+
+                    b.Navigation("CurrentPlant");
+                });
+
             modelBuilder.Entity("ManagingAgriculture.Models.LeaveRecord", b =>
                 {
                     b.HasOne("ManagingAgriculture.Models.ApplicationUser", "User")
@@ -889,7 +967,14 @@ namespace ManagingAgriculture.Migrations
                         .WithMany()
                         .HasForeignKey("CompanyId");
 
+                    b.HasOne("ManagingAgriculture.Models.Field", "Field")
+                        .WithMany("Plants")
+                        .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Company");
+
+                    b.Navigation("Field");
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.Resource", b =>
@@ -940,11 +1025,17 @@ namespace ManagingAgriculture.Migrations
 
             modelBuilder.Entity("ManagingAgriculture.Models.TaskAssignment", b =>
                 {
+                    b.HasOne("ManagingAgriculture.Models.Machinery", "AssignedMachinery")
+                        .WithMany()
+                        .HasForeignKey("AssignedMachineryId");
+
                     b.HasOne("ManagingAgriculture.Models.ApplicationUser", "AssignedToUser")
                         .WithMany()
                         .HasForeignKey("AssignedToUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("AssignedMachinery");
 
                     b.Navigation("AssignedToUser");
                 });
@@ -1003,6 +1094,11 @@ namespace ManagingAgriculture.Migrations
             modelBuilder.Entity("ManagingAgriculture.Models.Company", b =>
                 {
                     b.Navigation("Employees");
+                });
+
+            modelBuilder.Entity("ManagingAgriculture.Models.Field", b =>
+                {
+                    b.Navigation("Plants");
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.Machinery", b =>

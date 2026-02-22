@@ -1,0 +1,104 @@
+@model ManagingAgriculture.Models.Field
+@{
+    ViewData["Title"] = "Edit Field";
+}
+
+<div class="dashboard-container">
+    <h2>🌾 Edit Field - @Model.Name</h2>
+    
+    <div class="card mt-3">
+        <div class="card-body">
+            <form asp-action="EditField" asp-route-id="@Model.Id" method="post">
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label fw-bold">Field Name</label>
+                    <input asp-for="Name" class="form-control" required />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SizeInDecars" class="form-label fw-bold">Size (Decars)</label>
+                    <input asp-for="SizeInDecars" type="number" step="0.01" class="form-control" required />
+                    <span asp-validation-for="SizeInDecars" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="City" class="form-label fw-bold">City (Bulgaria)</label>
+                    <select asp-for="City" class="form-control" required>
+                        <option>Sofia</option>
+                        <option>Plovdiv</option>
+                        <option>Burgas</option>
+                        <option>Varna</option>
+                        <option>Rousse</option>
+                        <option>Stara Zagora</option>
+                        <option>Pleven</option>
+                        <option>Sliven</option>
+                        <option>Dobrich</option>
+                        <option>Shumen</option>
+                        <option>Haskovo</option>
+                        <option>Razgrad</option>
+                        <option>Montana</option>
+                        <option>Pazardzhik</option>
+                        <option>Blagoevgrad</option>
+                        <option>Kyustendil</option>
+                        <option>Lovech</option>
+                        <option>Veliko Tarnovo</option>
+                        <option>Vidin</option>
+                        <option>Yambol</option>
+                        <option>Smolyan</option>
+                        <option>Petrich</option>
+                        <option>Sandanski</option>
+                    </select>
+                    <span asp-validation-for="City" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SoilType" class="form-label fw-bold">Soil Type</label>
+                    <select asp-for="SoilType" class="form-control" required>
+                        <option>Clay</option>
+                        <option>Loamy</option>
+                        <option>Sandy</option>
+                        <option>Silt</option>
+                        <option>Peat</option>
+                        <option>Chalk</option>
+                    </select>
+                    <span asp-validation-for="SoilType" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SunlightExposure" class="form-label fw-bold">Sunlight Exposure</label>
+                    <select asp-for="SunlightExposure" class="form-control" required>
+                        <option>Full Sun</option>
+                        <option>Partial Sun</option>
+                        <option>Partial Shade</option>
+                        <option>Full Shade</option>
+                    </select>
+                    <span asp-validation-for="SunlightExposure" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="AverageTemperatureCelsius" class="form-label fw-bold">Average Temperature (°C)</label>
+                    <input asp-for="AverageTemperatureCelsius" type="number" step="0.01" class="form-control" required />
+                    <span asp-validation-for="AverageTemperatureCelsius" class="text-danger"></span>
+                </div>
+
+                <div class="alert alert-info">
+                    @{
+                        if (Model.IsOccupied)
+                        {
+                            <p><strong>This field is currently occupied.</strong> You can still edit environmental properties, but the current plant will inherit these values.</p>
+                        }
+                        else
+                        {
+                            <p><strong>This field is available.</strong> You can plant a new crop here.</p>
+                        }
+                    }
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <a asp-action="ManageFields" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -62,6 +62,23 @@
                         <i class="fas fa-tint"></i>
                         <span>Soil Humidity</span>
                     </a>
+
+                    @if (User.IsInRole("Boss"))
+                    {
+                        <p class="menu-title">Management</p>
+                        <a href="@Url.Action("ManageFields", "Boss")" class="menu-item">
+                            <i class="fas fa-field"></i>
+                            <span>Manage Fields</span>
+                        </a>
+                    }
+
+                    @if (User.IsInRole("Employee") || User.IsInRole("Manager"))
+                    {
+                        <a href="@Url.Action("Index", "Task")" class="menu-item">
+                            <i class="fas fa-tasks"></i>
+                            <span>View Tasks</span>
+                        </a>
+                    }
                     
                     @if (User.IsInRole("SystemAdmin"))
                     {

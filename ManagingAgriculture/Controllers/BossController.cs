@@ -314,5 +314,121 @@ namespace ManagingAgriculture.Controllers
              await _context.SaveChangesAsync();
              return Ok(new { newUsed = user.LeaveDaysUsed });
         }
+
+        // --- FIELD MANAGEMENT ---
+
+        [HttpGet]
+        public async Task<IActionResult> ManageFields()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null || currentUser.CompanyId == null) return Challenge();
+
+            var fields = await _context.Fields
+                .Where(f => f.CompanyId == currentUser.CompanyId)
+                .ToListAsync();
+
+            return View(fields);
+        }
+
+        [HttpGet]
+        public IActionResult CreateField()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateField(Field model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null || currentUser.CompanyId == null) return Challenge();
+
+            var field = new Field
+            {
+                Name = model.Name,
+                SizeInDecars = model.SizeInDecars,
+                City = model.City,
+                SoilType = model.SoilType,
+                SunlightExposure = model.SunlightExposure,
+                AverageTemperatureCelsius = model.AverageTemperatureCelsius,
+                IsOccupied = false,
+                CompanyId = currentUser.CompanyId,
+                CreatedDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow
+            };
+
+            _context.Fields.Add(field);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(ManageFields));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditField(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null || currentUser.CompanyId == null) return Challenge();
+
+            var field = await _context.Fields.FindAsync(id);
+            if (field == null || field.CompanyId != currentUser.CompanyId) return NotFound();
+
+            return View(field);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditField(int id, Field model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null || currentUser.CompanyId == null) return Challenge();
+
+            var field = await _context.Fields.FindAsync(id);
+            if (field == null || field.CompanyId != currentUser.CompanyId) return NotFound();
+
+            field.Name = model.Name;
+            field.SizeInDecars = model.SizeInDecars;
+            field.City = model.City;
+            field.SoilType = model.SoilType;
+            field.SunlightExposure = model.SunlightExposure;
+            field.AverageTemperatureCelsius = model.AverageTemperatureCelsius;
+            field.UpdatedDate = DateTime.UtcNow;
+
+            _context.Fields.Update(field);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(ManageFields));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteField(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null || currentUser.CompanyId == null) return Challenge();
+
+            var field = await _context.Fields.FindAsync(id);
+            if (field == null || field.CompanyId != currentUser.CompanyId) return NotFound();
+
+            // Only delete if field is not occupied
+            if (field.IsOccupied)
+            {
+                TempData["Error"] = "Cannot delete an occupied field. Harvest the current plant first.";
+                return RedirectToAction(nameof(ManageFields));
+            }
+
+            _context.Fields.Remove(field);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(ManageFields));
+        }
     }
 }

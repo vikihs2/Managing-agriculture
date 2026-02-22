@@ -23,5 +23,10 @@ namespace ManagingAgriculture.Models
         public ApplicationUser? AssignedToUser { get; set; }
 
         public int? CompanyId { get; set; } // To link to company
+        
+        // Machine Reservation
+        public int? AssignedMachineryId { get; set; }
+        [ForeignKey("AssignedMachineryId")]
+        public Machinery? AssignedMachinery { get; set; }
     }
 }

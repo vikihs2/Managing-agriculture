@@ -16,7 +16,7 @@ namespace ManagingAgriculture.Controllers
         {
             if (!_arduino.IsConnected())
             {
-                return RedirectToAction("ArduinoDisconnected", "Error");
+                return View("Disconnected");
             }
             return View();
         }

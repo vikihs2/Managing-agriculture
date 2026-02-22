@@ -74,8 +74,22 @@
     <!-- Weather Widget -->
     <div class="card mb-4 shadow-sm">
         <div class="card-header bg-gradient bg-primary text-white d-flex justify-content-between align-items-center">
-             <h5 class="mb-0"><i class="fas fa-cloud-sun me-2"></i> Weather in Sofia, Bulgaria</h5>
-             <div id="weather-temp" class="2 fs-4 fw-bold">--°C</div>
+             <div class="d-flex align-items-center gap-3">
+                 <h5 class="mb-0"><i class="fas fa-cloud-sun me-2"></i> Weather:</h5>
+                 <select id="weatherCity" class="form-select form-select-sm" style="width: 150px; background-color: rgba(255,255,255,0.9); border:none; border-radius: 4px; font-weight:bold;">
+                     <option value="42.6977,23.3219">Sofia</option>
+                     <option value="42.1438,24.7497">Plovdiv</option>
+                     <option value="43.2046,27.9105">Varna</option>
+                     <option value="42.5061,27.4678">Burgas</option>
+                     <option value="43.8564,25.9708">Ruse</option>
+                     <option value="42.4328,25.6419">Stara Zagora</option>
+                     <option value="43.4170,24.6067">Pleven</option>
+                     <option value="42.6858,26.3292">Sliven</option>
+                     <option value="43.5667,27.8333">Dobrich</option>
+                     <option value="43.2706,26.9229">Shumen</option>
+                 </select>
+             </div>
+             <div id="weather-temp" class="fs-4 fw-bold">--°C</div>
         </div>
         <div class="card-body bg-light">
              <div id="weather-details" class="d-flex justify-content-around align-items-center text-center">
@@ -88,40 +102,58 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            fetch('https://api.open-meteo.com/v1/forecast?latitude=42.6977&longitude=23.3219&current_weather=true')
-            .then(response => response.json())
-            .then(data => {
-                if(data.current_weather) {
-                    const w = data.current_weather;
-                    document.getElementById('weather-temp').innerText = w.temperature + "°C";
-                    
-                    // Simple icon logic
-                    let icon = '<i class="fas fa-sun fa-3x text-warning"></i>'; // Default clear
-                    if(w.weathercode > 3) icon = '<i class="fas fa-cloud fa-3x text-secondary"></i>';
-                    if(w.weathercode > 50) icon = '<i class="fas fa-cloud-rain fa-3x text-primary"></i>';
-                    if(w.weathercode > 70) icon = '<i class="fas fa-snowflake fa-3x text-info"></i>';
+            const citySelect = document.getElementById('weatherCity');
+            
+            function loadWeather() {
+                const [lat, lng] = citySelect.value.split(',');
+                document.getElementById('weather-details').innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+                
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`)
+                .then(response => response.json())
+                .then(data => {
+                    if(data.current_weather) {
+                        const w = data.current_weather;
+                        document.getElementById('weather-temp').innerText = w.temperature + "°C";
+                        
+                        let icon = '<i class="fas fa-sun fa-3x text-warning"></i>'; // Default clear
+                        if(w.weathercode > 3) icon = '<i class="fas fa-cloud fa-3x text-secondary"></i>';
+                        if(w.weathercode > 50) icon = '<i class="fas fa-cloud-rain fa-3x text-primary"></i>';
+                        if(w.weathercode > 70) icon = '<i class="fas fa-snowflake fa-3x text-info"></i>';
 
-                    document.getElementById('weather-details').innerHTML = `
-                        <div>
-                            ${icon}
-                            <p class="mb-0 mt-1 text-muted">Condition</p>
-                        </div>
-                        <div>
-                            <i class="fas fa-wind fa-2x text-muted mb-2"></i>
-                            <h5 class="mb-0">${w.windspeed} km/h</h5>
-                            <small class="text-muted">Wind Speed</small>
-                        </div>
-                        <div>
-                            <i class="fas fa-compass fa-2x text-muted mb-2"></i>
-                            <h5 class="mb-0">${w.winddirection}°</h5>
-                            <small class="text-muted">Wind Dir</small>
-                        </div>
-                    `;
-                }
-            })
-            .catch(err => {
-                document.getElementById('weather-details').innerHTML = '<p class="text-danger">Failed to load weather data.</p>';
+                        document.getElementById('weather-details').innerHTML = `
+                            <div>
+                                ${icon}
+                                <p class="mb-0 mt-1 text-muted">Condition</p>
+                            </div>
+                            <div>
+                                <i class="fas fa-wind fa-2x text-muted mb-2"></i>
+                                <h5 class="mb-0">${w.windspeed} km/h</h5>
+                                <small class="text-muted">Wind Speed</small>
+                            </div>
+                            <div>
+                                <i class="fas fa-compass fa-2x text-muted mb-2"></i>
+                                <h5 class="mb-0">${w.winddirection}°</h5>
+                                <small class="text-muted">Wind Dir</small>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('weather-details').innerHTML = '<p class="text-danger">Failed to load weather data.</p>';
+                });
+            }
+
+            const savedCity = localStorage.getItem('weatherCitySetting');
+            if (savedCity) {
+                citySelect.value = savedCity;
+            }
+
+            citySelect.addEventListener('change', function() {
+                localStorage.setItem('weatherCitySetting', this.value);
+                loadWeather();
             });
+
+            loadWeather();
         });
     </script>
 

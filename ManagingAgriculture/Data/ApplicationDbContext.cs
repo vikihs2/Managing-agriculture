@@ -13,6 +13,7 @@ namespace ManagingAgriculture.Data
 
         public DbSet<Company> Companies { get; set; }
         public DbSet<CompanyInvitation> CompanyInvitations { get; set; }
+        public DbSet<Field> Fields { get; set; }
         public DbSet<Plant> Plants { get; set; }
         public DbSet<Resource> Resources { get; set; }
         public DbSet<Machinery> Machinery { get; set; }
@@ -23,11 +24,25 @@ namespace ManagingAgriculture.Data
         public DbSet<SensorReading> SensorReadings { get; set; }
         public DbSet<ContactForm> ContactForms { get; set; }
         public DbSet<TaskAssignment> TaskAssignments { get; set; }
-        public DbSet<LeaveRecord> LeaveRecords { get; set; }
+        public DbSet<LeaveRecord> LeaveRecords { get; set;}
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            // Configure Field <-> Plant relationship
+            builder.Entity<Plant>()
+                .HasOne(p => p.Field)
+                .WithMany(f => f.Plants)
+                .HasForeignKey(p => p.FieldId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Configure Field <-> Current Plant relationship
+            builder.Entity<Field>()
+                .HasOne(f => f.CurrentPlant)
+                .WithOne()
+                .HasForeignKey<Field>(f => f.CurrentPlantId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Configure Machinery <-> MarketplaceListing relationship
             builder.Entity<MarketplaceListing>()
@@ -36,11 +51,16 @@ namespace ManagingAgriculture.Data
                 .HasForeignKey(m => m.MachineryId)
                 .OnDelete(DeleteBehavior.SetNull); // Or Restrict, depending on requirements. SetNull is safer if machinery is deleted but listing remains (though unlikely).
 
-            // Configure decimal precision for currency and other decimal fields to avoid warnings
-            builder.Entity<Plant>()
-                .Property(p => p.AvgTemperatureCelsius)
+            // Configure decimal precision for Field
+            builder.Entity<Field>()
+                .Property(f => f.SizeInDecars)
+                .HasColumnType("decimal(10,2)");
+
+            builder.Entity<Field>()
+                .Property(f => f.AverageTemperatureCelsius)
                 .HasColumnType("decimal(5,2)");
 
+            // Configure decimal precision for currency and other decimal fields to avoid warnings
             builder.Entity<Resource>()
                 .Property(r => r.Quantity)
                 .HasColumnType("decimal(10,2)");

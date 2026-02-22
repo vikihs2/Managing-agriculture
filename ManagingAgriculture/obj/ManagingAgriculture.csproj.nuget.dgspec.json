@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Viktor\\Desktop\\diplomna.rabota\\managingAgriculture\\Managing-agriculture\\ManagingAgriculture\\ManagingAgriculture.csproj": {}
+    "C:\\Users\\Viktor\\Desktop\\diplomna\\Managing-agriculture\\ManagingAgriculture\\ManagingAgriculture.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Viktor\\Desktop\\diplomna.rabota\\managingAgriculture\\Managing-agriculture\\ManagingAgriculture\\ManagingAgriculture.csproj": {
+    "C:\\Users\\Viktor\\Desktop\\diplomna\\Managing-agriculture\\ManagingAgriculture\\ManagingAgriculture.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Viktor\\Desktop\\diplomna.rabota\\managingAgriculture\\Managing-agriculture\\ManagingAgriculture\\ManagingAgriculture.csproj",
+        "projectUniqueName": "C:\\Users\\Viktor\\Desktop\\diplomna\\Managing-agriculture\\ManagingAgriculture\\ManagingAgriculture.csproj",
         "projectName": "ManagingAgriculture",
-        "projectPath": "C:\\Users\\Viktor\\Desktop\\diplomna.rabota\\managingAgriculture\\Managing-agriculture\\ManagingAgriculture\\ManagingAgriculture.csproj",
+        "projectPath": "C:\\Users\\Viktor\\Desktop\\diplomna\\Managing-agriculture\\ManagingAgriculture\\ManagingAgriculture.csproj",
         "packagesPath": "C:\\Users\\Viktor\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Viktor\\Desktop\\diplomna.rabota\\managingAgriculture\\Managing-agriculture\\ManagingAgriculture\\obj\\",
+        "outputPath": "C:\\Users\\Viktor\\Desktop\\diplomna\\Managing-agriculture\\ManagingAgriculture\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Viktor\\AppData\\Roaming\\NuGet\\NuGet.Config"

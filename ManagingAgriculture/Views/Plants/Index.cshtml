@@ -26,7 +26,7 @@
 
                 <div class="growth-info">
                     <div class="growth-label d-flex justify-content-between">
-                        <span>Growth Stage</span>
+                        <span>Approximate Growth</span>
                         <span class="growth-percent">@plant.GrowthStagePercent%</span>
                     </div>
                     <div class="progress" style="height:8px; background:#e6e6e6; border-radius:4px;">
@@ -47,23 +47,23 @@
                     <p class="notes-text">@plant.Notes</p>
                 </div>
 
-                @if (!string.IsNullOrEmpty(plant.SoilType) || !string.IsNullOrEmpty(plant.SunlightExposure) || plant.IsIndoor || plant.AvgTemperatureCelsius.HasValue || plant.WateringFrequencyDays.HasValue)
+                @if (!string.IsNullOrEmpty(plant.Field?.SoilType) || !string.IsNullOrEmpty(plant.Field?.SunlightExposure) || plant.IsIndoor || plant.Field?.AverageTemperatureCelsius != null || plant.WateringFrequencyDays.HasValue)
                 {
                     <div class="agronomic-section mt-3 pt-3" style="border-top: 1px solid #e6e6e6;">
                         <p class="section-title" style="font-weight: 600; font-size: 0.9rem; margin-bottom: 10px;">Agronomic Details</p>
                         <div class="agronomic-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; font-size: 0.85rem;">
-                            @if (!string.IsNullOrEmpty(plant.SoilType))
+                            @if (!string.IsNullOrEmpty(plant.Field?.SoilType))
                             {
                                 <div class="detail-item">
                                     <span class="detail-label">Soil Type:</span>
-                                    <span class="detail-value">@plant.SoilType</span>
+                                    <span class="detail-value">@plant.Field.SoilType</span>
                                 </div>
                             }
-                            @if (!string.IsNullOrEmpty(plant.SunlightExposure))
+                            @if (!string.IsNullOrEmpty(plant.Field?.SunlightExposure))
                             {
                                 <div class="detail-item">
                                     <span class="detail-label">Sunlight:</span>
-                                    <span class="detail-value">@plant.SunlightExposure</span>
+                                    <span class="detail-value">@plant.Field.SunlightExposure</span>
                                 </div>
                             }
                             @if (plant.IsIndoor)
@@ -73,11 +73,11 @@
                                     <span class="detail-value">Indoor</span>
                                 </div>
                             }
-                            @if (plant.AvgTemperatureCelsius.HasValue)
+                            @if (plant.Field?.AverageTemperatureCelsius != null)
                             {
                                 <div class="detail-item">
                                     <span class="detail-label">Temperature:</span>
-                                    <span class="detail-value">@plant.AvgTemperatureCelsius.Value.ToString("F1")°C</span>
+                                    <span class="detail-value">@plant.Field.AverageTemperatureCelsius.ToString("F1")°C</span>
                                 </div>
                             }
                             @if (plant.WateringFrequencyDays.HasValue)
@@ -90,8 +90,16 @@
                         </div>
                     </div>
                 }
-                <div class="mt-3 d-flex gap-2 action-row">
+                <div class="mt-3 d-flex gap-2 action-row flex-wrap">
                     <a class="btn btn-sm btn-outline-primary action-btn" href="@Url.Action("Edit", "Plants", new { id = plant.Id })"><i class="fas fa-edit"></i> Edit</a>
+                    @if (plant.GrowthStagePercent >= 99 || plant.Status == "Active")
+                    {
+                        <form asp-action="Harvest" method="post" style="display:inline-block;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@plant.Id" />
+                            <button type="submit" class="btn btn-sm btn-warning action-btn"><i class="fas fa-cut"></i> Harvest</button>
+                        </form>
+                    }
                     <form asp-action="Delete" method="post" style="display:inline-block;">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@plant.Id" />

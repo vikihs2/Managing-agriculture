@@ -16,8 +16,9 @@ namespace ManagingAgriculture.Models
 
         [Required]
         [DataType(DataType.Date)]
-        [Display(Name = "Planted Date")]
+        [Display(Name = "Plant Date")]
         public DateTime PlantedDate { get; set; }
+
 
         [DataType(DataType.Date)]
         [Display(Name = "Current Date")]
@@ -33,21 +34,15 @@ namespace ManagingAgriculture.Models
 
         public string? Notes { get; set; }
 
-        [StringLength(50)]
-        [Display(Name = "Soil Type")]
-        public string? SoilType { get; set; }
-
-        [StringLength(50)]
-        [Display(Name = "Sunlight Exposure")]
-        public string? SunlightExposure { get; set; }
+        // Field selection - replaces manual environment input
+        [Required]
+        [Display(Name = "Field")]
+        public int FieldId { get; set; }
 
         [Display(Name = "Indoor Plant")]
         public bool IsIndoor { get; set; }
 
-        [Range(-50, 60)]
-        [Display(Name = "Average Temperature (°C)")]
-        public decimal? AvgTemperatureCelsius { get; set; }
-
+        [Required]
         [Range(0, 365)]
         [Display(Name = "Watering Frequency (days)")]
         public int? WateringFrequencyDays { get; set; }

@@ -22,12 +22,17 @@ namespace ManagingAgriculture.Models
 		/// <summary>User ownership (if freelancer)</summary>
 		public string? OwnerUserId { get; set; }
 
+		/// <summary>Field where this plant is growing</summary>
+		public int? FieldId { get; set; }
+		[ForeignKey("FieldId")]
+		public Field? Field { get; set; }
+
 		/// <summary>Name of the plant (e.g., 'Tomato Garden A')</summary>
 		[Required]
 		[StringLength(100)]
 		public string Name { get; set; } = string.Empty;
 
-		/// <summary>Type of plant (e.g., 'Tomato', 'Corn')</summary>
+		/// <summary>Type of plant (e.g., 'Tomato', 'Corn') - LOCKED after creation</summary>
 		[Required]
 		[StringLength(50)]
 		public string PlantType { get; set; } = string.Empty;
@@ -61,20 +66,8 @@ namespace ManagingAgriculture.Models
 
 		// ===== AGRONOMIC DETAILS =====
 
-		/// <summary>Soil type: Clay, Loamy, Sandy, etc.</summary>
-		[StringLength(50)]
-		public string? SoilType { get; set; }
-
-		/// <summary>Sunlight requirement: Full Sun, Partial Shade, etc.</summary>
-		[StringLength(50)]
-		public string? SunlightExposure { get; set; }
-
 		/// <summary>Whether plant is grown indoors</summary>
 		public bool IsIndoor { get; set; }
-
-		/// <summary>Average optimal temperature in Celsius</summary>
-		[Range(-50, 60)]
-		public decimal? AvgTemperatureCelsius { get; set; }
 
 		/// <summary>Watering frequency in days</summary>
 		[Range(0, 365)]

@@ -26,10 +26,48 @@ namespace ManagingAgriculture.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
-            var tasks = await _context.TaskAssignments
-                .Where(t => t.AssignedToUserId == user.Id)
-                .OrderByDescending(t => t.AssignedDate)
-                .ToListAsync();
+            List<TaskAssignment> tasks = new List<TaskAssignment>();
+
+            if (User.IsInRole("Boss"))
+            {
+                // Boss sees all tasks in their company
+                tasks = await _context.TaskAssignments
+                    .Where(t => t.CompanyId == user.CompanyId)
+                    .OrderByDescending(t => t.AssignedDate)
+                    .ToListAsync();
+            }
+            else if (User.IsInRole("Manager"))
+            {
+                // Manager sees:
+                // 1. Tasks assigned to them
+                // 2. Tasks assigned to their employees (where they are the assigner's manager)
+                var managerTasks = await _context.TaskAssignments
+                    .Where(t => t.AssignedToUserId == user.Id && t.CompanyId == user.CompanyId)
+                    .ToListAsync();
+
+                // Get employees managed by this manager (simplified - assumes manager is in same company)
+                var employees = await _userManager.GetUsersInRoleAsync("Employee");
+                var employeeIds = employees
+                    .Where(e => e.CompanyId == user.CompanyId)
+                    .Select(e => e.Id)
+                    .ToList();
+
+                var employeeTasks = await _context.TaskAssignments
+                    .Where(t => employeeIds.Contains(t.AssignedToUserId) && t.CompanyId == user.CompanyId)
+                    .ToListAsync();
+
+                tasks = managerTasks.Concat(employeeTasks)
+                    .OrderByDescending(t => t.AssignedDate)
+                    .ToList();
+            }
+            else
+            {
+                // Employee sees only tasks assigned to them
+                tasks = await _context.TaskAssignments
+                    .Where(t => t.AssignedToUserId == user.Id)
+                    .OrderByDescending(t => t.AssignedDate)
+                    .ToListAsync();
+            }
 
             return View(tasks);
         }

@@ -48,14 +48,14 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Add status code handling
+app.UseStatusCodePagesWithReExecute("/Error/{0}");
+
 // app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Add status code handling
-app.UseStatusCodePagesWithReExecute("/Error/{0}");
 
 app.MapStaticAssets();
 

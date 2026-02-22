@@ -62,6 +62,8 @@ namespace ManagingAgriculture.Models
 		[Column(TypeName = "decimal(10,1)")]
 		public decimal? EngineHours { get; set; }
 
+		public bool BoughtFromMarketplace { get; set; }
+
 		// ===== NAVIGATION PROPERTIES =====
 
 		/// <summary>Maintenance history records for this equipment</summary>
