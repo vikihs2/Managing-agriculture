@@ -62,6 +62,7 @@ namespace ManagingAgriculture.Models
 		[Column(TypeName = "decimal(10,1)")]
 		public decimal? EngineHours { get; set; }
 
+		[NotMapped]
 		public bool BoughtFromMarketplace { get; set; }
 
 		// ===== NAVIGATION PROPERTIES =====
