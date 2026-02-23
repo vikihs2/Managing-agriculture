@@ -29,30 +29,38 @@ namespace ManagingAgriculture.Controllers
             IQueryable<ManagingAgriculture.Models.Plant> plantsQuery = _context.Plants.Include(p => p.Field);
             IQueryable<ManagingAgriculture.Models.Resource> resourcesQuery = _context.Resources;
             IQueryable<ManagingAgriculture.Models.Machinery> machineryQuery = _context.Machinery;
+            IQueryable<ManagingAgriculture.Models.HarvestRecord> harvestQuery = _context.HarvestRecords;
 
             if (user.CompanyId != null)
             {
-                plantsQuery = plantsQuery.Where(p => p.CompanyId == user.CompanyId || (p.CompanyId == null && p.OwnerUserId == user.Id));
-                resourcesQuery = resourcesQuery.Where(r => r.CompanyId == user.CompanyId || (r.CompanyId == null && r.OwnerUserId == user.Id));
-                machineryQuery = machineryQuery.Where(m => m.CompanyId == user.CompanyId || (m.CompanyId == null && m.OwnerUserId == user.Id));
+                plantsQuery = plantsQuery.Where(p => p.CompanyId == user.CompanyId);
+                resourcesQuery = resourcesQuery.Where(r => r.CompanyId == user.CompanyId);
+                machineryQuery = machineryQuery.Where(m => m.CompanyId == user.CompanyId);
+                harvestQuery = harvestQuery.Where(h => h.CompanyId == user.CompanyId);
             }
             else
             {
                 plantsQuery = plantsQuery.Where(p => p.OwnerUserId == user.Id);
                 resourcesQuery = resourcesQuery.Where(r => r.OwnerUserId == user.Id);
                 machineryQuery = machineryQuery.Where(m => m.OwnerUserId == user.Id);
+                harvestQuery = harvestQuery.Where(h => h.OwnerUserId == user.Id);
             }
 
             var viewModel = new ManagingAgriculture.ViewModels.DashboardViewModel
             {
-                ActivePlantsCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(plantsQuery.Where(p => p.Status != "Harvested")),
-                ResourcesCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(resourcesQuery),
-                MachineryCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(machineryQuery),
-                LowStockCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(resourcesQuery.Where(r => r.Quantity <= r.LowStockThreshold)),
-                ActiveCrops = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(plantsQuery
+                ActivePlantsCount = await plantsQuery.CountAsync(p => p.Status != "Harvested"),
+                ResourcesCount = await resourcesQuery.CountAsync(),
+                MachineryCount = await machineryQuery.CountAsync(),
+                LowStockCount = await resourcesQuery.CountAsync(r => r.Quantity <= r.LowStockThreshold),
+                ActiveCrops = await plantsQuery
                     .Where(p => p.Status != "Harvested")
                     .OrderByDescending(p => p.CreatedDate)
-                    .Take(5))
+                    .Take(5)
+                    .ToListAsync(),
+                RecentHarvests = await harvestQuery
+                    .OrderByDescending(h => h.HarvestedDate)
+                    .Take(20)
+                    .ToListAsync()
             };
 
             // Pass Company Name if exists
@@ -71,6 +79,11 @@ namespace ManagingAgriculture.Controllers
             
             ViewBag.PendingInvites = pendingInvites;
 
+            // Count unread messages for notification badge
+            var unreadMessages = await _context.ContactForms
+                .CountAsync(m => m.Email == user.Email && !m.IsReplied);
+            ViewBag.UnreadMessageCount = unreadMessages;
+
             return View(viewModel);
         }
 
@@ -84,12 +97,11 @@ namespace ManagingAgriculture.Controllers
             var invite = await _context.CompanyInvitations.FindAsync(inviteId);
             if (invite != null && invite.Email == user.Email && !invite.IsUsed)
             {
-                // Join Company
                 user.CompanyId = invite.CompanyId;
+                if (invite.Salary > 0) user.Salary = invite.Salary;
+                if (invite.LeaveDays > 0) user.LeaveDaysTotal = invite.LeaveDays;
                 await _userManager.UpdateAsync(user);
                 
-                // Assign new role
-                // Remove old roles first? Maybe. Assuming "User" -> "Employee"/"Manager"
                 var currentRoles = await _userManager.GetRolesAsync(user);
                 await _userManager.RemoveFromRolesAsync(user, currentRoles);
                 await _userManager.AddToRoleAsync(user, invite.Role);
@@ -111,9 +123,6 @@ namespace ManagingAgriculture.Controllers
             var invite = await _context.CompanyInvitations.FindAsync(inviteId);
             if (invite != null && invite.Email == user.Email && !invite.IsUsed)
             {
-                // Mark as used (declined) or delete? Let's delete to allow re-invite or mark used.
-                // If we mark used, they can't be invited again easily? 
-                // Better to just delete the invitation so Boss can re-invite if mistake.
                 _context.CompanyInvitations.Remove(invite);
                 await _context.SaveChangesAsync();
             }

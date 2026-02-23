@@ -17,13 +17,35 @@
         var showSidebar = !(controller == "Home" && action == "Contact");
 
         string companyName = "";
+        string welcomeName = "User";
+        string userEmail = "";
+
         if (User?.Identity?.IsAuthenticated == true)
         {
             var user = await UserManager.GetUserAsync(User);
-            if (user != null && user.CompanyId != null)
+            if (user != null)
             {
-                var company = await DbContext.Companies.FindAsync(user.CompanyId);
-                companyName = company?.Name;
+                userEmail = user.Email ?? "";
+                if (user.CompanyId != null)
+                {
+                    var company = await DbContext.Companies.FindAsync(user.CompanyId);
+                    companyName = company?.Name ?? "";
+                }
+
+                // Determine display name
+                if (!string.IsNullOrEmpty(userEmail) && userEmail.Contains("@"))
+                {
+                    var raw = userEmail.Split('@')[0];
+                    welcomeName = raw.Length > 0 ? char.ToUpper(raw[0]) + raw.Substring(1) : raw;
+                }
+
+                // Special role names
+                if (User.IsInRole("SystemAdmin") || welcomeName.Equals("admin", StringComparison.OrdinalIgnoreCase))
+                    welcomeName = "Admin";
+                else if (User.IsInRole("ITSupport"))
+                    welcomeName = "IT Support";
+                else if (User.IsInRole("Boss"))
+                    welcomeName = "Boss";
             }
         }
     }
@@ -46,6 +68,16 @@
                         <i class="fas fa-leaf"></i>
                         <span>Plant Tracking</span>
                     </a>
+
+                    @* Fields - visible to all authenticated users (needed for plant tracking) *@
+                    @if (User?.Identity?.IsAuthenticated == true)
+                    {
+                        <a href="@Url.Action("Index", "Fields")" class="menu-item">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>Fields</span>
+                        </a>
+                    }
+
                     <a href="@Url.Action("Index", "Resources")" class="menu-item">
                         <i class="fas fa-box"></i>
                         <span>Resources</span>
@@ -63,23 +95,38 @@
                         <span>Soil Humidity</span>
                     </a>
 
+                    @* Role-specific panel links *@
                     @if (User.IsInRole("Boss"))
                     {
                         <p class="menu-title">Management</p>
-                        <a href="@Url.Action("ManageFields", "Boss")" class="menu-item">
-                            <i class="fas fa-field"></i>
-                            <span>Manage Fields</span>
+                        <a href="@Url.Action("Index", "Boss")" class="menu-item">
+                            <i class="fas fa-crown"></i>
+                            <span>Boss Panel</span>
+                        </a>
+                        <a href="@Url.Action("ManageStaff", "Boss")" class="menu-item">
+                            <i class="fas fa-users-cog"></i>
+                            <span>Manage Staff</span>
                         </a>
                     }
 
-                    @if (User.IsInRole("Employee") || User.IsInRole("Manager"))
+                    @if (User.IsInRole("Manager"))
                     {
-                        <a href="@Url.Action("Index", "Task")" class="menu-item">
-                            <i class="fas fa-tasks"></i>
-                            <span>View Tasks</span>
+                        <p class="menu-title">My Panel</p>
+                        <a href="@Url.Action("Index", "Manager")" class="menu-item">
+                            <i class="fas fa-briefcase"></i>
+                            <span>Manager Panel</span>
                         </a>
                     }
-                    
+
+                    @if (User.IsInRole("Employee"))
+                    {
+                        <p class="menu-title">My Panel</p>
+                        <a href="@Url.Action("Index", "Employee")" class="menu-item">
+                            <i class="fas fa-user-hard-hat"></i>
+                            <span>Employee Panel</span>
+                        </a>
+                    }
+
                     @if (User.IsInRole("SystemAdmin"))
                     {
                         <a href="@Url.Action("Index", "Admin")" class="menu-item" style="color:red">
@@ -87,10 +134,23 @@
                             <span>Admin Panel</span>
                         </a>
                     }
-                    
+
+                    @if (User.IsInRole("ITSupport"))
+                    {
+                        <p class="menu-title">IT</p>
+                        <a href="@Url.Action("Index", "ITSupport")" class="menu-item">
+                            <i class="fas fa-tools"></i>
+                            <span>IT Panel</span>
+                        </a>
+                    }
+
                     <p class="menu-title">Account</p>
                     @if (User?.Identity?.IsAuthenticated == true)
                     {
+                        <a href="@Url.Action("Index", "Inbox")" class="menu-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>Inbox</span>
+                        </a>
                         <form asp-controller="Account" asp-action="Logout" method="post" class="menu-item" style="display:flex;align-items:center;gap:8px;">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-cancel" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;">
@@ -115,10 +175,13 @@
 
                         @if (new[] { "Plants", "Resources", "Machinery", "Marketplace" }.Contains(controller))
                         {
-                            <!-- On these resource pages show only Add (if available) and Home at the far right -->
-                            <a class="btn btn-add me-2" href="@Url.Action("Add", controller)">
-                                <i class="fas fa-plus"></i> Add
-                            </a>
+                            <!-- On resource pages show Add + Home -->
+                            @if (controller != "Plants" || !User.IsInRole("Employee"))
+                            {
+                                <a class="btn btn-add me-2" href="@Url.Action("Add", controller)">
+                                    <i class="fas fa-plus"></i> Add
+                                </a>
+                            }
                             <a href="@Url.Action("Index", "Home")" class="home-link ms-3" title="Home">
                                 <div class="home-icon"><i class="fas fa-home"></i></div>
                             </a>
@@ -127,23 +190,7 @@
                         {
                             @if (User?.Identity?.IsAuthenticated == true)
                             {
-                                var email = User.Identity?.Name ?? User.FindFirst("email")?.Value ?? "";
-                                var name = "User";
-                                if (!string.IsNullOrEmpty(email) && email.Contains("@"))
-                                {
-                                    name = email.Split('@')[0];
-                                    if (name.Length > 0)
-                                    {
-                                        name = char.ToUpper(name[0]) + name.Substring(1);
-                                    }
-                                }
-                                // Show Admin when user is in role Admin or username/email matches admin patterns
-                                if (User.IsInRole("Admin") || name.Equals("admin", StringComparison.OrdinalIgnoreCase) || email.StartsWith("admin", StringComparison.OrdinalIgnoreCase) || email.Equals("admin@gmail.com", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    name = "Admin";
-                                }
-                                <span class="me-3">Welcome @name!</span>
-                                @* Show Dashboard/Sign out only on the public Home page, not on Dashboard itself *@
+                                <span class="me-3">Welcome @welcomeName!</span>
                                 @if (controller == "Home")
                                 {
                                     <a class="btn btn-dashboard me-2" href="@Url.Action("Index", "Dashboard")">Dashboard</a>
@@ -158,7 +205,7 @@
                             }
                             else
                             {
-                                    <a href="@Url.Action("Index", "Home")" class="home-link ms-3" title="Home">
+                                <a href="@Url.Action("Index", "Home")" class="home-link ms-3" title="Home">
                                     <div class="home-icon"><i class="fas fa-home"></i></div>
                                 </a>
                             }
@@ -182,13 +229,13 @@
             <i class="fas fa-leaf"></i>
             <span>Plants</span>
         </a>
+        <a href="@Url.Action("Index", "Fields")" class="nav-item @(controller == "Fields" ? "active" : "")">
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Fields</span>
+        </a>
         <a href="@Url.Action("Index", "Resources")" class="nav-item @(controller == "Resources" ? "active" : "")">
             <i class="fas fa-box"></i>
-            <span>Resources</span>
-        </a>
-        <a href="@Url.Action("Index", "Machinery")" class="nav-item @(controller == "Machinery" ? "active" : "")">
-            <i class="fas fa-cogs"></i>
-            <span>Machines</span>
+            <span>Stock</span>
         </a>
         <a href="@Url.Action("Index", "Marketplace")" class="nav-item @(controller == "Marketplace" ? "active" : "")">
             <i class="fas fa-shopping-cart"></i>
@@ -196,7 +243,7 @@
         </a>
         @if (User?.Identity?.IsAuthenticated == true)
         {
-             <form asp-controller="Account" asp-action="Logout" method="post" class="nav-item" style="background:none;border:none;padding:0;">
+            <form asp-controller="Account" asp-action="Logout" method="post" class="nav-item" style="background:none;border:none;padding:0;">
                 @Html.AntiForgeryToken()
                 <button type="submit" style="background:none;border:none;color:inherit;display:flex;flex-direction:column;align-items:center;padding:0;">
                     <i class="fas fa-sign-out-alt"></i>
@@ -217,7 +264,6 @@
             const body = document.body;
             const icon = toggle.querySelector('i');
 
-            // Check cookie
             const getCookie = (name) => {
                 const value = `; ${document.cookie}`;
                 const parts = value.split(`; ${name}=`);
@@ -231,9 +277,8 @@
 
             toggle.addEventListener('click', function() {
                 body.classList.toggle('dark-mode');
-                
                 if (body.classList.contains('dark-mode')) {
-                    document.cookie = "theme=dark; path=/; max-age=31536000"; // 1 year
+                    document.cookie = "theme=dark; path=/; max-age=31536000";
                     icon.classList.replace('fa-moon', 'fa-sun');
                 } else {
                     document.cookie = "theme=light; path=/; max-age=31536000";

@@ -17,12 +17,17 @@ namespace ManagingAgriculture.Models
         public bool IsCompletedByEmployee { get; set; }
         public bool IsApprovedByBoss { get; set; }
 
-        // Navigation
-        public string AssignedToUserId { get; set; }
+        // Who the task is assigned to
+        public string AssignedToUserId { get; set; } = string.Empty;
         [ForeignKey("AssignedToUserId")]
         public ApplicationUser? AssignedToUser { get; set; }
 
-        public int? CompanyId { get; set; } // To link to company
+        // Who assigned this task (Boss or Manager)
+        public string? AssignedByUserId { get; set; }
+        [ForeignKey("AssignedByUserId")]
+        public ApplicationUser? AssignedByUser { get; set; }
+
+        public int? CompanyId { get; set; }
         
         // Machine Reservation
         public int? AssignedMachineryId { get; set; }

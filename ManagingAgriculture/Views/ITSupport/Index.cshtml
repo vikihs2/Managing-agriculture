@@ -6,22 +6,27 @@
 <div class="dashboard-container">
     <div class="page-header">
         <div>
-            <h2>🛠 IT Support</h2>
-            <p class="subtitle">Technical Maintenance</p>
+            <h2>🛠 IT Support Panel</h2>
+            <p class="subtitle">Technical Maintenance & System Diagnostics</p>
         </div>
     </div>
 
+    <!-- Diagnostics Card -->
     <div class="row">
-         <div class="col-md-4">
-            <div class="card mb-4">
+        <div class="col-md-4">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-server me-2"></i>System Diagnostics</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Diagnostics</h5>
-                     <p>Status: <span id="diagStatus" class="text-success">Healthy</span></p>
-                    <button id="runDiagsBtn" class="btn btn-info text-white">Run Diagnostics</button>
+                    <p>Status: <span id="diagStatus" class="text-success fw-bold">Healthy ✅</span></p>
+                    <button id="runDiagsBtn" class="btn btn-info text-white w-100">
+                        <i class="fas fa-play me-1"></i>Run Diagnostics
+                    </button>
                     <div id="diagnosticsResult" class="mt-3" style="display:none;">
-                        <div class="alert alert-info">
+                        <div class="alert alert-info p-2">
                             <strong>Diagnostics Report:</strong>
-                            <table class="table table-sm table-striped mt-2">
+                            <table class="table table-sm table-striped mt-2 mb-0">
                                 <tbody id="diagTable"></tbody>
                             </table>
                         </div>
@@ -29,114 +34,42 @@
                 </div>
             </div>
         </div>
-    </div>
-
-     <!-- Contact Messages -->
-    <div class="card mb-4">
-        <div class="card-header bg-dark text-white">
-            <h5 class="mb-0">Support Tickets / Messages</h5>
-        </div>
-        <div class="card-body p-0">
-             <div class="table-responsive">
-                <table class="table mb-0">
-                    <thead>
-                        <tr>
-                            <th>From</th>
-                            <th>Email</th>
-                            <th>Message</th>
-                            <th>Date</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model != null && Model.Any())
-                        {
-                            foreach (var msg in Model)
-                            {
-                                <tr>
-                                    <td>@msg.FullName</td>
-                                    <td>@msg.Email</td>
-                                    <td>@msg.Message</td>
-                                    <td>@msg.CreatedDate.ToShortDateString()</td>
-                                    <td>
-                                    <td>
-                                        @if (msg.IsReplied)
-                                        {
-                                            <span class="badge bg-success">Replied</span>
-                                        }
-                                        else
-                                        {
-                                            <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#replyModal" data-id="@msg.Id" data-email="@msg.Email">
-                                                Reply
-                                            </button>
-                                        }
-                                    </td>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr><td colspan="5" class="text-center text-muted">No messages found.</td></tr>
-                        }
-                    </tbody>
-                </table>
+        <div class="col-md-8">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>About IT Support Access</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Run system diagnostics to verify DB connectivity</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>View and reply to support tickets in the <strong>Inbox</strong></li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Access all public sections of the app</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Manage fields in the Fields section</li>
+                    </ul>
+                    <hr/>
+                    <small class="text-muted">
+                        <i class="fas fa-lightbulb me-1 text-warning"></i>
+                        <strong>DB Connection:</strong> Click "Run Diagnostics" — if the database is connected, you will see real counts for Users, Plants, etc.
+                        If you see errors, the DB connection is down.
+                    </small>
+                </div>
             </div>
-        </div>
-    </div>
-                            <tr><td colspan="5" class="text-center text-muted">No messages found.</td></tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Reply Modal -->
-<div class="modal fade" id="replyModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form asp-action="ReplyToMessage" method="post">
-                <div class="modal-header">
-                    <h5 class="modal-title">Reply to Support Ticket</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="id" id="replyMsgId" />
-                    <div class="mb-3">
-                        <label class="form-label">To:</label>
-                        <input type="text" class="form-control" id="replyEmail" readonly />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Reply:</label>
-                        <textarea class="form-control" name="replyContent" rows="4" required placeholder="Technical response..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-dark">Send Reply</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        // Diagnostics functionality
         document.getElementById('runDiagsBtn').addEventListener('click', async function() {
             const btn = this;
-            const originalText = btn.textContent;
-            btn.textContent = 'Running...';
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Running...';
             btn.disabled = true;
 
             try {
                 const response = await fetch('/ITSupport/RunDiagnostics', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
+                    headers: { 'Content-Type': 'application/json' }
                 });
 
                 const data = await response.json();
@@ -155,41 +88,28 @@
                             displayValue = value.toLocaleString();
                         }
                         
-                        row.innerHTML = `<td><strong>${key}:</strong></td><td>${displayValue}</td>`;
+                        const isStatus = key.includes('Status') || key.includes('Database');
+                        row.innerHTML = `<td><strong>${key}:</strong></td><td class="${isStatus ? 'text-success fw-bold' : ''}">${displayValue}</td>`;
                         diagTable.appendChild(row);
                     }
                     
                     document.getElementById('diagnosticsResult').style.display = 'block';
                     document.getElementById('diagStatus').textContent = 'Healthy ✅';
-                    document.getElementById('diagStatus').className = 'text-success';
+                    document.getElementById('diagStatus').className = 'text-success fw-bold';
                 } else {
                     document.getElementById('diagStatus').textContent = 'Error ❌';
-                    document.getElementById('diagStatus').className = 'text-danger';
+                    document.getElementById('diagStatus').className = 'text-danger fw-bold';
                     alert('Diagnostic failed: ' + data.error);
                 }
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('diagStatus').textContent = 'Error ❌';
-                document.getElementById('diagStatus').className = 'text-danger';
-                alert('Failed to run diagnostics');
+                document.getElementById('diagStatus').className = 'text-danger fw-bold';
+                alert('Failed to run diagnostics. Check your connection.');
             } finally {
-                btn.textContent = originalText;
+                btn.innerHTML = originalHtml;
                 btn.disabled = false;
             }
-        });
-
-        // Reply modal functionality
-        var replyModal = document.getElementById('replyModal');
-        replyModal.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget;
-            var id = button.getAttribute('data-id');
-            var email = button.getAttribute('data-email');
-            
-            var modalIdInput = replyModal.querySelector('#replyMsgId');
-            var modalEmailInput = replyModal.querySelector('#replyEmail');
-            
-            modalIdInput.value = id;
-            modalEmailInput.value = email;
         });
     </script>
 }

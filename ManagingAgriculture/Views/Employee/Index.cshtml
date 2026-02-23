@@ -1,33 +1,345 @@
+@model IEnumerable<ManagingAgriculture.Models.TaskAssignment>
+@using ManagingAgriculture.Models
 @{
-    ViewData["Title"] = "Employee Dashboard";
+    ViewData["Title"] = "Employee Panel";
+    var leaveRequests = ViewBag.LeaveRequests as List<LeaveRequest> ?? new List<LeaveRequest>();
+    int leaveDaysRemaining = ViewBag.LeaveDaysRemaining ?? 0;
+    int leaveDaysTotal = ViewBag.LeaveDaysTotal ?? 20;
+    int leaveDaysUsed = ViewBag.LeaveDaysUsed ?? 0;
+    decimal salary = ViewBag.Salary ?? 0m;
+    bool isSalaryPaid = ViewBag.IsSalaryPaid ?? false;
 }
 
 <div class="dashboard-container">
-    <div class="page-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2>👷 Employee Panel</h2>
-            <p class="subtitle">Your tasks and tools</p>
+            <p class="subtitle mb-0">Your tasks, schedule, and employment details</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="Inbox" asp-action="Index" class="btn btn-warning text-dark">
+                <i class="fas fa-envelope me-1"></i>Inbox
+            </a>
+            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-chart-bar me-1"></i>Dashboard
+            </a>
         </div>
     </div>
 
-     <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">My Tasks</h5>
-                    <p class="card-text">View assigned work.</p>
-                    <a href="#" class="btn btn-primary">View Tasks</a>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Section 1: MY TASKS -->
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header text-white d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #1b4332, #2d6a4f);">
+                    <i class="fas fa-tasks fa-lg"></i>
+                    <h5 class="mb-0">My Tasks</h5>
+                    <span class="badge bg-light text-dark ms-auto">@Model.Count() tasks</span>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Task Description</th>
+                                        <th>Machine</th>
+                                        <th>Assigned</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var task in Model)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold">@task.Description</td>
+                                            <td>
+                                                @if (task.AssignedMachinery != null)
+                                                {
+                                                    <span class="badge bg-info text-dark">
+                                                        <i class="fas fa-cog me-1"></i>@task.AssignedMachinery.Name
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted small">—</span>
+                                                }
+                                            </td>
+                                            <td class="text-muted small">@task.AssignedDate.ToString("dd MMM yyyy")</td>
+                                            <td>
+                                                @if (task.IsApprovedByBoss)
+                                                {
+                                                    <span class="badge bg-success">✅ Approved</span>
+                                                }
+                                                else if (task.IsCompletedByEmployee)
+                                                {
+                                                    <span class="badge bg-warning text-dark">⏳ Awaiting Approval</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">🔄 In Progress</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (!task.IsCompletedByEmployee && !task.IsApprovedByBoss)
+                                                {
+                                                    <form asp-action="CompleteTask" method="post" style="display:inline;">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="taskId" value="@task.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-success">
+                                                            <i class="fas fa-check me-1"></i>Mark Done
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else if (task.IsCompletedByEmployee && !task.IsApprovedByBoss)
+                                                {
+                                                    <small class="text-warning">Waiting boss review...</small>
+                                                }
+                                                else
+                                                {
+                                                    <small class="text-success">Completed ✓</small>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-clipboard-list fa-2x mb-2 opacity-25"></i>
+                            <p>No tasks assigned to you yet.</p>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-             <div class="card mb-4">
+
+        <!-- Section 2: HIRE RULES / EMPLOYMENT DETAILS -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #1d4e89, #2874a6);">
+                    <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>Employment Details</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Resources</h5>
-                    <p class="card-text">Update resource usage.</p>
-                    <a href="/Resources" class="btn btn-success">Resource Inventory</a>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Monthly Salary</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <h4 class="mb-0 fw-bold">$@salary.ToString("N2")</h4>
+                            @if (isSalaryPaid)
+                            {
+                                <span class="badge bg-success"><i class="fas fa-check me-1"></i>Paid</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Pending</span>
+                            }
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="mb-2">
+                        <label class="form-label text-muted small">Leave Days</label>
+                        <div class="d-flex justify-content-between">
+                            <span>Used: <strong>@leaveDaysUsed</strong></span>
+                            <span>Total: <strong>@leaveDaysTotal</strong></span>
+                            <span class="text-success fw-bold">Remaining: @leaveDaysRemaining</span>
+                        </div>
+                        <div class="progress mt-2" style="height: 10px;">
+                            <div class="progress-bar bg-success" style="width: @(leaveDaysTotal > 0 ? (leaveDaysUsed * 100 / leaveDaysTotal) : 0)%;"></div>
+                        </div>
+                    </div>
+                    <hr />
+                    <p class="text-muted small mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        As an employee, you can: view plant data, restock resources (+Add 10 / -Use 10), view machinery, and request days off.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: LEAVE CALENDAR -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #6b2d8b, #9b59b6);">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Leave Calendar</h5>
+                    <small class="opacity-75">Click a date to request a day off</small>
+                </div>
+                <div class="card-body">
+                    <div id="employeeCalendar"></div>
+                </div>
+            </div>
+
+            <!-- Leave Requests List -->
+            <div class="card shadow-sm border-0 mt-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>My Leave Requests</h6>
+                </div>
+                <div class="card-body p-0">
+                    @if (leaveRequests.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var req in leaveRequests.OrderByDescending(r => r.LeaveDate))
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@req.LeaveDate.ToString("dd MMM yyyy")</td>
+                                            <td class="text-muted">@(req.Reason ?? "—")</td>
+                                            <td>
+                                                @if (req.Status == "Approved")
+                                                {
+                                                    <span class="badge bg-success">✅ Approved</span>
+                                                }
+                                                else if (req.Status == "Rejected")
+                                                {
+                                                    <span class="badge bg-danger">❌ Rejected</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning text-dark">⏳ Pending</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-3">No leave requests yet.</p>
+                    }
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Leave Request Form (hidden, triggered by calendar click) -->
+<div class="modal fade" id="leaveRequestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <form asp-action="RequestLeave" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header" style="background: linear-gradient(135deg, #6b2d8b, #9b59b6); color:white;">
+                    <h5 class="modal-title"><i class="fas fa-calendar-plus me-2"></i>Request Day Off</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="leaveDate" id="requestLeaveDate" />
+                    <p>Date: <strong id="requestLeaveDateDisplay"></strong></p>
+                    <div class="mb-3">
+                        <label class="form-label">Reason (optional)</label>
+                        <input type="text" name="reason" class="form-control" placeholder="e.g. Medical appointment" />
+                    </div>
+                    <small class="text-muted">Remaining days: <strong>@leaveDaysRemaining</strong></small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- FullCalendar -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+
+<script>
+    // Bulgarian holidays
+    const bgHolidays = [
+        '2026-01-01', '2026-03-03', '2026-05-01', '2026-05-06', '2026-05-24',
+        '2026-09-06', '2026-09-22', '2026-11-01', '2026-12-24', '2026-12-25', '2026-12-26'
+    ];
+
+    // Leave request data from server
+    const leaveRequests = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        leaveRequests.Select(r => new {
+            date = r.LeaveDate.ToString("yyyy-MM-dd"),
+            status = r.Status
+        })
+    ));
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('employeeCalendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            height: 380,
+            events: function(info, success, failure) {
+                const events = [];
+
+                // Holidays - dark grey, not clickable
+                bgHolidays.forEach(d => {
+                    events.push({ title: '🎉 Holiday', start: d, color: '#6c757d', display: 'background' });
+                });
+
+                // Leave requests - colored by status
+                leaveRequests.forEach(req => {
+                    let color = '#ffc107'; // yellow = pending
+                    let title = '⏳ Pending';
+                    if (req.status === 'Approved') { color = '#198754'; title = '✅ My Day Off'; }
+                    if (req.status === 'Rejected') { color = '#dc3545'; title = '❌ Rejected'; }
+                    events.push({ title: title, start: req.date, color: color });
+                });
+
+                success(events);
+            },
+            dayCellClassNames: function(arg) {
+                const dayOfWeek = arg.date.getDay();
+                if (dayOfWeek === 0 || dayOfWeek === 6) return ['bg-light-grey'];
+                const dateStr = arg.date.toISOString().split('T')[0];
+                if (bgHolidays.includes(dateStr)) return ['bg-light-grey'];
+                return [];
+            },
+            dateClick: function(info) {
+                const dateStr = info.dateStr;
+                const dayOfWeek = info.date.getDay();
+
+                // Block weekends
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    alert('You cannot request leave on weekends.');
+                    return;
+                }
+
+                // Block holidays
+                if (bgHolidays.includes(dateStr)) {
+                    alert('You cannot request leave on Bulgarian public holidays.');
+                    return;
+                }
+
+                // Show modal
+                document.getElementById('requestLeaveDate').value = dateStr;
+                document.getElementById('requestLeaveDateDisplay').textContent = new Date(dateStr).toLocaleDateString('en-BG', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+                new bootstrap.Modal(document.getElementById('leaveRequestModal')).show();
+            }
+        });
+        calendar.render();
+    });
+</script>

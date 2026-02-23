@@ -74,6 +74,14 @@ namespace ManagingAgriculture.Models
 		[Column(TypeName = "decimal(10,1)")]
 		public decimal? EngineHours { get; set; }
 
+		// ===== SELLER TRACKING =====
+
+		/// <summary>User who created the listing</summary>
+		public string? SellerUserId { get; set; }
+
+		/// <summary>Company of seller (if from a company)</summary>
+		public int? SellerCompanyId { get; set; }
+
 		// ===== NAVIGATION PROPERTIES =====
 
 		/// <summary>Foreign key for the associated Machinery (optional)</summary>
@@ -82,5 +90,8 @@ namespace ManagingAgriculture.Models
 		/// <summary>The associated Machinery item</summary>
 		[ForeignKey("MachineryId")]
 		public Machinery? Machinery { get; set; }
+
+		/// <summary>Purchase requests for this listing</summary>
+		public ICollection<MarketplacePurchaseRequest>? PurchaseRequests { get; set; }
 	}
 }

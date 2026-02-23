@@ -14,7 +14,6 @@ namespace ManagingAgriculture.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> _userManager;
-        // In a real app we would inject the service, but static for now is fine or we can add to Program.cs
         private readonly ManagingAgriculture.Services.CropDataService _cropService;
 
         public PlantsController(ApplicationDbContext context, Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> userManager)
@@ -22,6 +21,22 @@ namespace ManagingAgriculture.Controllers
             _context = context;
             _userManager = userManager;
             _cropService = new ManagingAgriculture.Services.CropDataService();
+        }
+
+        // Helper: get fields for a user (company or personal)
+        private async Task<List<Field>> GetUserFields(ApplicationUser user, bool unoccupiedOnly = false)
+        {
+            IQueryable<Field> query;
+            if (user.CompanyId != null)
+            {
+                query = _context.Fields.Where(f => f.CompanyId == user.CompanyId);
+            }
+            else
+            {
+                query = _context.Fields.Where(f => f.OwnerUserId == user.Id);
+            }
+            if (unoccupiedOnly) query = query.Where(f => !f.IsOccupied);
+            return await query.ToListAsync();
         }
 
         public async Task<IActionResult> Index()
@@ -35,14 +50,14 @@ namespace ManagingAgriculture.Controllers
             {
                 plants = await _context.Plants
                     .Include(p => p.Field)
-                    .Where(p => p.CompanyId == user.CompanyId || (p.CompanyId == null && p.OwnerUserId == user.Id))
+                    .Where(p => p.CompanyId == user.CompanyId && p.Status != "Harvested")
                     .ToListAsync();
             }
             else
             {
                 plants = await _context.Plants
                     .Include(p => p.Field)
-                    .Where(p => p.OwnerUserId == user.Id)
+                    .Where(p => p.OwnerUserId == user.Id && p.Status != "Harvested")
                     .ToListAsync();
             }
             
@@ -59,13 +74,12 @@ namespace ManagingAgriculture.Controllers
             // Role check - Employees cannot add plants
             if (user.CompanyId != null && User.IsInRole("Employee"))
             {
-                return Forbid();
+                TempData["Error"] = "Employees cannot add plants.";
+                return RedirectToAction("Index");
             }
 
-            // Get available fields (not occupied)
-            var fields = await _context.Fields
-                .Where(f => (f.CompanyId == user.CompanyId || (f.CompanyId == null && f.OwnerUserId == user.Id)) && !f.IsOccupied)
-                .ToListAsync();
+            // Get available fields - all authenticated users can see fields for their context
+            var fields = await GetUserFields(user, unoccupiedOnly: true);
 
             ViewBag.Fields = fields;
             ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
@@ -77,35 +91,53 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(PlantCreateViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
-                var user = await _userManager.GetUserAsync(User);
-                if (user != null)
-                {
-                    var fields = await _context.Fields
-                        .Where(f => (f.CompanyId == user.CompanyId || (f.CompanyId == null && f.OwnerUserId == user.Id)) && !f.IsOccupied)
-                        .ToListAsync();
-                    ViewBag.Fields = fields;
-                }
-                return View(model);
-            }
-
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null) return Challenge();
 
+            // Role check
+            if (currentUser.CompanyId != null && User.IsInRole("Employee"))
+            {
+                TempData["Error"] = "Employees cannot add plants.";
+                return RedirectToAction("Index");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
+                ViewBag.Fields = await GetUserFields(currentUser, unoccupiedOnly: true);
+                return View(model);
+            }
+
             // Get field
             var field = await _context.Fields.FindAsync(model.FieldId);
-            if (field == null) return NotFound("Field not found");
+            if (field == null)
+            {
+                ModelState.AddModelError("FieldId", "Field not found. Please add a field first.");
+                ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
+                ViewBag.Fields = await GetUserFields(currentUser, unoccupiedOnly: true);
+                return View(model);
+            }
 
             // Verify field ownership
             if (currentUser.CompanyId != null)
             {
-                if (field.CompanyId != currentUser.CompanyId) return Forbid();
+                if (field.CompanyId != currentUser.CompanyId)
+                {
+                    ModelState.AddModelError("FieldId", "You do not own this field.");
+                    ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
+                    ViewBag.Fields = await GetUserFields(currentUser, unoccupiedOnly: true);
+                    return View(model);
+                }
             }
             else
             {
-                if (field.OwnerUserId != currentUser.Id) return Forbid();
+                if (field.OwnerUserId != currentUser.Id)
+                {
+                    ModelState.AddModelError("FieldId", "You do not own this field.");
+                    ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
+                    ViewBag.Fields = await GetUserFields(currentUser, unoccupiedOnly: true);
+                    return View(model);
+                }
             }
 
             // Check if field is still available
@@ -122,7 +154,7 @@ namespace ManagingAgriculture.Controllers
             foreach (var requiredResource in requiredResources)
             {
                 var resource = await _context.Resources
-                    .FirstOrDefaultAsync(r => 
+                    .FirstOrDefaultAsync(r =>
                         r.Name.ToLower() == requiredResource.Name.ToLower() &&
                         (r.CompanyId == currentUser.CompanyId || (r.CompanyId == null && r.OwnerUserId == currentUser.Id)));
 
@@ -134,14 +166,16 @@ namespace ManagingAgriculture.Controllers
 
             if (insufficientResources.Any())
             {
-                TempData["Error"] = "Not enough resources to plant this crop on selected field: " + string.Join(", ", insufficientResources);
-                return RedirectToAction("Add");
+                TempData["Error"] = $"Not enough resources to plant {model.CropType} on a {field.SizeInDecars} decar field: " + string.Join(", ", insufficientResources);
+                ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
+                ViewBag.Fields = await GetUserFields(currentUser, unoccupiedOnly: true);
+                return View(model);
             }
 
             // Use CurrentTrackingDate if provided, otherwise use today
             var trackingDate = model.CurrentTrackingDate ?? System.DateTime.Today;
 
-            // Calculate Growth % using the new algorithm
+            // Calculate Growth %
             int growthPercent = _cropService.CalculateGrowthPercentage(
                 model.PlantedDate,
                 trackingDate,
@@ -167,11 +201,11 @@ namespace ManagingAgriculture.Controllers
                 WateringFrequencyDays = model.WateringFrequencyDays,
                 CreatedDate = System.DateTime.UtcNow,
                 UpdatedDate = System.DateTime.UtcNow,
+                Status = "Active",
                 CompanyId = currentUser.CompanyId,
                 OwnerUserId = currentUser.CompanyId == null ? currentUser.Id : null
             };
 
-            // Save plant first to get the Id
             _context.Plants.Add(plant);
             await _context.SaveChangesAsync();
 
@@ -181,82 +215,39 @@ namespace ManagingAgriculture.Controllers
             _context.Fields.Update(field);
             await _context.SaveChangesAsync();
 
+            TempData["Success"] = $"Plant '{plant.Name}' added successfully!";
             return RedirectToAction("Index");
         }
 
         // Helper method to get required resources for a crop type and field size
         private List<(string Name, decimal Quantity, string Unit)> GetRequiredResources(string cropType, decimal fieldSizeDecars)
         {
-            // Seed requirements per decar for different crops (in kg)
             var seedRequirements = new Dictionary<string, decimal>
             {
                 // Grains
-                { "Wheat", 200 },
-                { "Corn (Maize)", 25 },
-                { "Rice", 150 },
-                { "Barley", 180 },
-                { "Oats", 150 },
-                { "Rye", 180 },
-                { "Sorghum", 10 },
-                { "Millet", 15 },
-                
+                { "Wheat", 200 }, { "Corn (Maize)", 25 }, { "Rice", 150 }, { "Barley", 180 },
+                { "Oats", 150 }, { "Rye", 180 }, { "Sorghum", 10 }, { "Millet", 15 },
                 // Root & Tuber
-                { "Potato", 200 },
-                { "Sweet Potato", 250 },
-                { "Carrot", 8 },
-                { "Beetroot", 20 },
-                { "Turnip", 5 },
-                { "Radish", 8 },
-                { "Cassava", 20 },
-                
+                { "Potato", 200 }, { "Sweet Potato", 250 }, { "Carrot", 8 }, { "Beetroot", 20 },
+                { "Turnip", 5 }, { "Radish", 8 }, { "Cassava", 20 },
                 // Vegetables
-                { "Tomato", 0.5m },
-                { "Cucumber", 2 },
-                { "Bell Pepper", 0.3m },
-                { "Chili Pepper", 0.3m },
-                { "Eggplant", 0.3m },
-                { "Onion", 20 },
-                { "Garlic", 200 },
-                { "Lettuce", 1 },
-                { "Spinach", 2 },
-                { "Cabbage", 0.5m },
-                { "Broccoli", 0.3m },
-                { "Cauliflower", 0.3m },
+                { "Tomato", 0.5m }, { "Cucumber", 2 }, { "Bell Pepper", 0.3m }, { "Chili Pepper", 0.3m },
+                { "Eggplant", 0.3m }, { "Onion", 20 }, { "Garlic", 200 }, { "Lettuce", 1 },
+                { "Spinach", 2 }, { "Cabbage", 0.5m }, { "Broccoli", 0.3m }, { "Cauliflower", 0.3m },
                 { "Zucchini", 2 },
-                
                 // Legumes
-                { "Beans (Green Beans)", 15 },
-                { "Peas", 80 },
-                { "Lentils", 100 },
-                { "Chickpeas", 100 },
-                { "Soybean", 80 },
-                
+                { "Beans (Green Beans)", 15 }, { "Peas", 80 }, { "Lentils", 100 },
+                { "Chickpeas", 100 }, { "Soybean", 80 },
                 // Fruits
-                { "Strawberry", 1 },
-                { "Watermelon", 3 },
-                { "Melon", 2 },
-                { "Pumpkin", 3 },
-                { "Squash", 3 },
-                
+                { "Strawberry", 1 }, { "Watermelon", 3 }, { "Melon", 2 }, { "Pumpkin", 3 }, { "Squash", 3 },
                 // Industrial
-                { "Sunflower", 20 },
-                { "Rapeseed (Canola)", 10 },
-                { "Cotton", 10 },
-                { "Sugar Beet", 25 },
-                { "Sugarcane", 30 },
-                
+                { "Sunflower", 20 }, { "Rapeseed (Canola)", 10 }, { "Cotton", 10 },
+                { "Sugar Beet", 25 }, { "Sugarcane", 30 },
                 // Herbs
-                { "Basil", 0.1m },
-                { "Parsley", 0.2m },
-                { "Dill", 0.2m },
-                { "Mint", 0.5m },
-                { "Oregano", 0.2m },
-                { "Thyme", 0.1m },
-                
+                { "Basil", 0.1m }, { "Parsley", 0.2m }, { "Dill", 0.2m }, { "Mint", 0.5m },
+                { "Oregano", 0.2m }, { "Thyme", 0.1m },
                 // Perennial
-                { "Alfalfa", 30 },
-                { "Clover", 25 },
-                { "Tobacco", 0.1m }
+                { "Alfalfa", 30 }, { "Clover", 25 }, { "Tobacco", 0.1m }
             };
 
             var resources = new List<(string Name, decimal Quantity, string Unit)>();
@@ -272,6 +263,36 @@ namespace ManagingAgriculture.Controllers
             return resources;
         }
 
+        // Helper: calculate estimated yield in kg based on crop type and field size
+        private decimal CalculateYield(string cropType, decimal fieldSizeDecars)
+        {
+            // Typical yield per decar in kg
+            var yieldPerDecar = new Dictionary<string, decimal>
+            {
+                { "Wheat", 350 }, { "Corn (Maize)", 800 }, { "Rice", 600 }, { "Barley", 250 },
+                { "Oats", 200 }, { "Rye", 200 }, { "Sorghum", 400 }, { "Millet", 150 },
+                { "Potato", 2500 }, { "Sweet Potato", 1500 }, { "Carrot", 2000 }, { "Beetroot", 2000 },
+                { "Turnip", 1500 }, { "Radish", 1000 }, { "Cassava", 1500 },
+                { "Tomato", 4000 }, { "Cucumber", 3000 }, { "Bell Pepper", 1500 }, { "Chili Pepper", 800 },
+                { "Eggplant", 2000 }, { "Onion", 2500 }, { "Garlic", 1000 }, { "Lettuce", 3000 },
+                { "Spinach", 1500 }, { "Cabbage", 4000 }, { "Broccoli", 1200 }, { "Cauliflower", 1000 },
+                { "Zucchini", 3000 },
+                { "Beans (Green Beans)", 500 }, { "Peas", 300 }, { "Lentils", 200 },
+                { "Chickpeas", 200 }, { "Soybean", 250 },
+                { "Strawberry", 1000 }, { "Watermelon", 4000 }, { "Melon", 3000 }, { "Pumpkin", 2000 }, { "Squash", 1500 },
+                { "Sunflower", 250 }, { "Rapeseed (Canola)", 200 }, { "Cotton", 300 },
+                { "Sugar Beet", 5000 }, { "Sugarcane", 8000 },
+                { "Basil", 400 }, { "Parsley", 600 }, { "Dill", 400 }, { "Mint", 500 },
+                { "Oregano", 200 }, { "Thyme", 150 },
+                { "Alfalfa", 800 }, { "Clover", 600 }, { "Tobacco", 300 }
+            };
+
+            if (yieldPerDecar.TryGetValue(cropType, out var yield))
+                return yield * fieldSizeDecars;
+
+            return 500 * fieldSizeDecars; // default
+        }
+
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -284,18 +305,17 @@ namespace ManagingAgriculture.Controllers
 
             if (user.CompanyId != null)
             {
-                // Company Logic
                 if (plant.CompanyId != user.CompanyId) return Forbid();
                 
                 // Role Restrictions - Only Boss and Manager can edit plants
                 if (User.IsInRole("Employee")) 
                 {
-                    return Forbid();
+                    TempData["Error"] = "Employees cannot edit plants.";
+                    return RedirectToAction("Index");
                 }
             }
             else
             {
-                // Personal Logic - Owner can do whatever
                 if (plant.OwnerUserId != user.Id) return Forbid();
             }
 
@@ -313,26 +333,11 @@ namespace ManagingAgriculture.Controllers
                 WateringFrequencyDays = plant.WateringFrequencyDays
             };
             
-            // Load available fields - include current field even if occupied
-            var fields = await _context.Fields
-                .Where(f => (f.CompanyId == user.CompanyId || (f.CompanyId == null && f.OwnerUserId == user.Id)))
-                .ToListAsync();
-            ViewBag.Fields = fields;
-            
+            // Load all fields (include current one even if occupied)
+            ViewBag.Fields = await GetUserFields(user);
             ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
             ViewBag.Id = plant.Id;
-            ViewBag.CropTypeLocked = true; // Prevent editing crop type
-            ViewBag.PlantStatus = plant.Status;
-            
-            // Get crop recommendations
-            if (!string.IsNullOrEmpty(plant.PlantType))
-            {
-                var (recSoil, recSun, recTemp, recWater) = _cropService.GetCropRecommendations(plant.PlantType);
-                ViewBag.RecommendedSoil = recSoil;
-                ViewBag.RecommendedSunlight = recSun;
-                ViewBag.RecommendedTemperature = recTemp;
-                ViewBag.RecommendedWater = recWater;
-            }
+            ViewBag.CropTypeLocked = true;
             
             // Get plant health status
             var healthStatus = _cropService.GetPlantStatus(plant.GrowthStagePercent, plant.PlantedDate, System.DateTime.Today);
@@ -345,66 +350,65 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, PlantCreateViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                var currentUser = await _userManager.GetUserAsync(User);
-                if (currentUser != null)
-                {
-                    ViewBag.Fields = await _context.Fields
-                        .Where(f => (f.CompanyId == currentUser.CompanyId || (f.CompanyId == null && f.OwnerUserId == currentUser.Id)))
-                        .ToListAsync();
-                }
-                ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
-                ViewBag.CropTypeLocked = true;
-                return View(model);
-            }
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
+
+            // Role restrictions
+            if (user.CompanyId != null && User.IsInRole("Employee"))
+            {
+                TempData["Error"] = "Employees cannot edit plants.";
+                return RedirectToAction("Index");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Fields = await GetUserFields(user);
+                ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
+                ViewBag.CropTypeLocked = true;
+                ViewBag.Id = id;
+                return View(model);
+            }
 
             var plant = await _context.Plants.Include(p => p.Field).FirstOrDefaultAsync(p => p.Id == id);
 
             if (plant == null) return NotFound();
 
-             // Authorization
+            // Authorization
             if (user.CompanyId != null)
             {
                 if (plant.CompanyId != user.CompanyId) return Forbid();
-                if (User.IsInRole("Employee")) 
-                {
-                    return Forbid();
-                }
             }
             else
             {
                 if (plant.OwnerUserId != user.Id) return Forbid();
             }
             
-            // CROP TYPE IS LOCKED - CANNOT BE CHANGED AFTER CREATION
+            // CROP TYPE IS LOCKED
             if (plant.PlantType != model.CropType)
             {
-                ModelState.AddModelError("CropType", "Crop type cannot be changed after planting.");
-                ViewBag.Fields = await _context.Fields
-                    .Where(f => (f.CompanyId == user.CompanyId || (f.CompanyId == null && f.OwnerUserId == user.Id)))
-                    .ToListAsync();
-                ViewBag.CropTypeLocked = true;
-                ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
-                return View(model);
+                model.CropType = plant.PlantType; // Force original
             }
 
             // Handle Field change
             if (plant.FieldId != model.FieldId)
             {
                 var newField = await _context.Fields.FindAsync(model.FieldId);
-                if (newField == null) return NotFound("Field not found");
+                if (newField == null)
+                {
+                    ModelState.AddModelError("FieldId", "Field not found.");
+                    ViewBag.Fields = await GetUserFields(user);
+                    ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
+                    ViewBag.CropTypeLocked = true;
+                    ViewBag.Id = id;
+                    return View(model);
+                }
                 if (newField.IsOccupied)
                 {
                     ModelState.AddModelError("FieldId", "The selected field is already occupied by another plant.");
-                    ViewBag.Fields = await _context.Fields
-                        .Where(f => (f.CompanyId == user.CompanyId || (f.CompanyId == null && f.OwnerUserId == user.Id)))
-                        .ToListAsync();
+                    ViewBag.Fields = await GetUserFields(user);
                     ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
                     ViewBag.CropTypeLocked = true;
+                    ViewBag.Id = id;
                     return View(model);
                 }
 
@@ -420,24 +424,18 @@ namespace ManagingAgriculture.Controllers
                     }
                 }
 
-                // Occupy new field
                 plant.FieldId = model.FieldId;
                 newField.IsOccupied = true;
-                // Currently EF couldn't set CurrentPlantId before saving plant, we will save it after update.
                 _context.Update(newField);
-                
-                // Temporarily assign new field to plant for growth calculation below
                 plant.Field = newField;
             }
 
-            // Use CurrentTrackingDate if provided, otherwise use today
             var trackingDate = model.CurrentTrackingDate ?? System.DateTime.Today;
             
-            // Calculate growth % using the new algorithm
             int growthPercent = _cropService.CalculateGrowthPercentage(
                 model.PlantedDate,
                 trackingDate,
-                model.CropType,
+                plant.PlantType,
                 plant.Field?.SoilType ?? "",
                 plant.Field?.AverageTemperatureCelsius,
                 model.IsIndoor,
@@ -446,7 +444,6 @@ namespace ManagingAgriculture.Controllers
             );
 
             plant.Name = model.Name;
-            // plant.PlantType = model.CropType; // LOCKED
             plant.PlantedDate = model.PlantedDate;
             plant.CurrentTrackingDate = trackingDate;
             plant.GrowthStagePercent = growthPercent;
@@ -459,6 +456,7 @@ namespace ManagingAgriculture.Controllers
             _context.Update(plant);
             await _context.SaveChangesAsync();
 
+            TempData["Success"] = "Plant updated successfully!";
             return RedirectToAction("Index");
         }
 
@@ -472,14 +470,14 @@ namespace ManagingAgriculture.Controllers
             var plant = await _context.Plants.FindAsync(id);
             if (plant != null)
             {
-                 // Authorization Check
                 if (user.CompanyId != null)
                 {
                     if (plant.CompanyId != user.CompanyId) return Forbid();
                     
-                     if (User.IsInRole("Employee") || User.IsInRole("Manager")) 
+                    if (User.IsInRole("Employee") || User.IsInRole("Manager")) 
                     {
-                        return Forbid();
+                        TempData["Error"] = "Only the Boss can delete plants.";
+                        return RedirectToAction("Index");
                     }
                 }
                 else
@@ -487,7 +485,7 @@ namespace ManagingAgriculture.Controllers
                     if (plant.OwnerUserId != user.Id) return Forbid();
                 }
 
-                // Free the field if plant is assigned to one
+                // Free the field
                 if (plant.FieldId.HasValue)
                 {
                     var field = await _context.Fields.FindAsync(plant.FieldId);
@@ -506,32 +504,50 @@ namespace ManagingAgriculture.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Harvest(int id)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
-            var plant = await _context.Plants.FindAsync(id);
+            var plant = await _context.Plants.Include(p => p.Field).FirstOrDefaultAsync(p => p.Id == id);
             if (plant == null) return NotFound();
 
-            // Authorization Check
+            // Authorization Check - anyone in the company can harvest
             if (user.CompanyId != null)
             {
                 if (plant.CompanyId != user.CompanyId) return Forbid();
-                
-                if (User.IsInRole("Employee"))
-                {
-                    return Forbid();
-                }
             }
             else
             {
                 if (plant.OwnerUserId != user.Id) return Forbid();
             }
 
-            // Mark plant as harvested
-            plant.Status = "Harvested";
-            plant.UpdatedDate = System.DateTime.UtcNow;
+            // Can only harvest at 100%
+            if (plant.GrowthStagePercent < 100)
+            {
+                TempData["Error"] = $"Cannot harvest yet! Plant is only at {plant.GrowthStagePercent}% growth. Must be 100%.";
+                return RedirectToAction("Index");
+            }
+
+            // Calculate yield
+            var fieldSize = plant.Field?.SizeInDecars ?? 1;
+            var yieldKg = CalculateYield(plant.PlantType, fieldSize);
+
+            // Create harvest record
+            var harvestRecord = new HarvestRecord
+            {
+                CompanyId = user.CompanyId,
+                OwnerUserId = user.CompanyId == null ? user.Id : null,
+                PlantName = plant.Name,
+                PlantType = plant.PlantType,
+                FieldName = plant.Field?.Name,
+                FieldSizeDecars = fieldSize,
+                EstimatedYieldKg = yieldKg,
+                HarvestedDate = System.DateTime.UtcNow,
+                HarvestedByUserId = user.Id
+            };
+            _context.HarvestRecords.Add(harvestRecord);
 
             // Free the field
             if (plant.FieldId.HasValue)
@@ -545,9 +561,11 @@ namespace ManagingAgriculture.Controllers
                 }
             }
 
-            _context.Update(plant);
+            // Remove plant from tracking (it disappears from plant tracking)
+            _context.Plants.Remove(plant);
             await _context.SaveChangesAsync();
 
+            TempData["Success"] = $"🌾 Harvested {plant.Name}! Estimated yield: {yieldKg:N0} kg of {plant.PlantType}.";
             return RedirectToAction("Index");
         }
     }

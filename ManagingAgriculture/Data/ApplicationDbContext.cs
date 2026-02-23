@@ -18,6 +18,7 @@ namespace ManagingAgriculture.Data
         public DbSet<Resource> Resources { get; set; }
         public DbSet<Machinery> Machinery { get; set; }
         public DbSet<MarketplaceListing> MarketplaceListings { get; set; }
+        public DbSet<MarketplacePurchaseRequest> MarketplacePurchaseRequests { get; set; }
         public DbSet<ResourceUsage> ResourceUsages { get; set; }
         public DbSet<MaintenanceHistory> MaintenanceHistory { get; set; }
         public DbSet<Sensor> Sensors { get; set; }
@@ -25,6 +26,8 @@ namespace ManagingAgriculture.Data
         public DbSet<ContactForm> ContactForms { get; set; }
         public DbSet<TaskAssignment> TaskAssignments { get; set; }
         public DbSet<LeaveRecord> LeaveRecords { get; set;}
+        public DbSet<LeaveRequest> LeaveRequests { get; set; }
+        public DbSet<HarvestRecord> HarvestRecords { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -95,6 +98,48 @@ namespace ManagingAgriculture.Data
 
             builder.Entity<MaintenanceHistory>()
                 .Property(m => m.Cost)
+                .HasColumnType("decimal(10,2)");
+
+            // Configure MarketplacePurchaseRequest relationships
+            builder.Entity<MarketplacePurchaseRequest>()
+                .HasOne(r => r.Listing)
+                .WithMany(l => l.PurchaseRequests)
+                .HasForeignKey(r => r.ListingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<MarketplacePurchaseRequest>()
+                .HasOne(r => r.BuyerUser)
+                .WithMany()
+                .HasForeignKey(r => r.BuyerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure LeaveRequest relationships
+            builder.Entity<LeaveRequest>()
+                .HasOne(l => l.User)
+                .WithMany()
+                .HasForeignKey(l => l.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure TaskAssignment FK to avoid multiple cascade paths
+            builder.Entity<TaskAssignment>()
+                .HasOne(t => t.AssignedToUser)
+                .WithMany()
+                .HasForeignKey(t => t.AssignedToUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TaskAssignment>()
+                .HasOne(t => t.AssignedByUser)
+                .WithMany()
+                .HasForeignKey(t => t.AssignedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure HarvestRecord decimal precision
+            builder.Entity<HarvestRecord>()
+                .Property(h => h.EstimatedYieldKg)
+                .HasColumnType("decimal(10,2)");
+
+            builder.Entity<HarvestRecord>()
+                .Property(h => h.FieldSizeDecars)
                 .HasColumnType("decimal(10,2)");
         }
     }

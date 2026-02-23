@@ -1,6 +1,9 @@
 @model IEnumerable<ManagingAgriculture.Models.Plant>
 @{
     ViewData["Title"] = "Plant Tracking";
+    bool isEmployee = User.IsInRole("Employee");
+    bool isBoss = User.IsInRole("Boss");
+    bool isManager = User.IsInRole("Manager");
 }
 
 <div class="plants-container">
@@ -8,54 +11,128 @@
         <div>
             <p class="subtitle">Monitor your crops and growth stages</p>
         </div>
+        <div class="d-flex gap-2">
+            @if (!isEmployee)
+            {
+                <a href="@Url.Action("Add", "Plants")" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i>Add Plant
+                </a>
+            }
+        </div>
     </div>
 
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-3">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mt-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     <div class="plants-grid mt-4">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <div style="font-size: 4rem; opacity:0.3;">🌱</div>
+                <h4 class="text-muted">No active plants</h4>
+                @if (!isEmployee)
+                {
+                    <p class="text-muted">Add your first plant to start tracking growth.</p>
+                    <a href="@Url.Action("Add", "Plants")" class="btn btn-success mt-2">
+                        <i class="fas fa-plus me-1"></i>Add First Plant
+                    </a>
+                }
+            </div>
+        }
         @foreach (var plant in Model)
         {
-            <div class="plant-card mb-3">
+            bool canHarvest = plant.GrowthStagePercent >= 100;
+
+            <div class="plant-card mb-3 @(canHarvest ? "border border-warning border-2" : "")">
+                @if (canHarvest)
+                {
+                    <div class="alert alert-warning py-1 px-3 mb-2 d-flex align-items-center justify-content-between">
+                        <span><i class="fas fa-star me-1"></i><strong>Ready to Harvest!</strong></span>
+                        <span class="badge bg-warning text-dark">100% Grown</span>
+                    </div>
+                }
+
                 <div class="plant-header d-flex justify-content-between align-items-center">
                     <h3>@plant.Name</h3>
                     <span class="plant-type">@plant.PlantType</span>
                 </div>
 
+                @if (plant.Field != null)
+                {
+                    <div class="mb-1">
+                        <small class="text-muted">
+                            <i class="fas fa-map-marked-alt me-1"></i>
+                            <strong>@plant.Field.Name</strong> — @plant.Field.City (@plant.Field.SizeInDecars dec.)
+                        </small>
+                    </div>
+                }
+
                 <div class="plant-date">
                     <i class="fas fa-calendar"></i>
                     <span>Planted: @plant.PlantedDate.ToString("d")</span>
+                    @if (plant.CurrentTrackingDate.HasValue)
+                    {
+                        <span class="ms-2 text-muted small">| Tracked: @plant.CurrentTrackingDate.Value.ToString("d")</span>
+                    }
                 </div>
 
                 <div class="growth-info">
                     <div class="growth-label d-flex justify-content-between">
-                        <span>Approximate Growth</span>
-                        <span class="growth-percent">@plant.GrowthStagePercent%</span>
+                        <span>Growth Progress</span>
+                        <span class="growth-percent fw-bold @(canHarvest ? "text-warning" : "")">
+                            @plant.GrowthStagePercent%
+                        </span>
                     </div>
-                    <div class="progress" style="height:8px; background:#e6e6e6; border-radius:4px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width:@plant.GrowthStagePercent%" aria-valuenow="@plant.GrowthStagePercent" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress" style="height:12px; background:#e6e6e6; border-radius:6px;">
+                        <div class="progress-bar @(canHarvest ? "bg-warning" : "bg-success") progress-bar-striped"
+                             role="progressbar"
+                             style="width:@plant.GrowthStagePercent%"
+                             aria-valuenow="@plant.GrowthStagePercent"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                        </div>
                     </div>
                 </div>
 
-                <div class="next-task-box mt-2 d-flex align-items-start">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <div>
-                        <span class="task-label">Next Task</span>
-                        <div class="task-text">@plant.NextTask</div>
+                @if (!string.IsNullOrEmpty(plant.NextTask))
+                {
+                    <div class="next-task-box mt-2 d-flex align-items-start">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <div>
+                            <span class="task-label">Next Task</span>
+                            <div class="task-text">@plant.NextTask</div>
+                        </div>
                     </div>
-                </div>
+                }
 
-                <div class="notes-section mt-2">
-                    <p class="notes-title">Notes</p>
-                    <p class="notes-text">@plant.Notes</p>
-                </div>
+                @if (!string.IsNullOrEmpty(plant.Notes))
+                {
+                    <div class="notes-section mt-2">
+                        <p class="notes-title">Notes</p>
+                        <p class="notes-text">@plant.Notes</p>
+                    </div>
+                }
 
-                @if (!string.IsNullOrEmpty(plant.Field?.SoilType) || !string.IsNullOrEmpty(plant.Field?.SunlightExposure) || plant.IsIndoor || plant.Field?.AverageTemperatureCelsius != null || plant.WateringFrequencyDays.HasValue)
+                @if (!string.IsNullOrEmpty(plant.Field?.SoilType) || !string.IsNullOrEmpty(plant.Field?.SunlightExposure) || plant.WateringFrequencyDays.HasValue)
                 {
                     <div class="agronomic-section mt-3 pt-3" style="border-top: 1px solid #e6e6e6;">
-                        <p class="section-title" style="font-weight: 600; font-size: 0.9rem; margin-bottom: 10px;">Agronomic Details</p>
-                        <div class="agronomic-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; font-size: 0.85rem;">
+                        <div class="agronomic-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; font-size: 0.85rem;">
                             @if (!string.IsNullOrEmpty(plant.Field?.SoilType))
                             {
                                 <div class="detail-item">
-                                    <span class="detail-label">Soil Type:</span>
+                                    <span class="detail-label">Soil:</span>
                                     <span class="detail-value">@plant.Field.SoilType</span>
                                 </div>
                             }
@@ -66,45 +143,66 @@
                                     <span class="detail-value">@plant.Field.SunlightExposure</span>
                                 </div>
                             }
-                            @if (plant.IsIndoor)
-                            {
-                                <div class="detail-item">
-                                    <span class="detail-label">Location:</span>
-                                    <span class="detail-value">Indoor</span>
-                                </div>
-                            }
                             @if (plant.Field?.AverageTemperatureCelsius != null)
                             {
                                 <div class="detail-item">
-                                    <span class="detail-label">Temperature:</span>
+                                    <span class="detail-label">Avg Temp:</span>
                                     <span class="detail-value">@plant.Field.AverageTemperatureCelsius.ToString("F1")°C</span>
                                 </div>
                             }
                             @if (plant.WateringFrequencyDays.HasValue)
                             {
                                 <div class="detail-item">
-                                    <span class="detail-label">Water Frequency:</span>
+                                    <span class="detail-label">Watering:</span>
                                     <span class="detail-value">Every @plant.WateringFrequencyDays days</span>
                                 </div>
                             }
                         </div>
                     </div>
                 }
+
+                <!-- ACTION BUTTONS -->
                 <div class="mt-3 d-flex gap-2 action-row flex-wrap">
-                    <a class="btn btn-sm btn-outline-primary action-btn" href="@Url.Action("Edit", "Plants", new { id = plant.Id })"><i class="fas fa-edit"></i> Edit</a>
-                    @if (plant.GrowthStagePercent >= 99 || plant.Status == "Active")
+                    @* Edit - Boss or Manager only *@
+                    @if (!isEmployee)
+                    {
+                        <a class="btn btn-sm btn-outline-primary action-btn" href="@Url.Action("Edit", "Plants", new { id = plant.Id })">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                    }
+
+                    @* Harvest - available to ALL if 100% grown *@
+                    @if (canHarvest)
                     {
                         <form asp-action="Harvest" method="post" style="display:inline-block;">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@plant.Id" />
-                            <button type="submit" class="btn btn-sm btn-warning action-btn"><i class="fas fa-cut"></i> Harvest</button>
+                            <button type="submit" class="btn btn-sm btn-warning action-btn fw-bold"
+                                    onclick="return confirm('Harvest @plant.Name? This will record the yield and free the field.');">
+                                <i class="fas fa-wheat-alt"></i> 🌾 HARVEST
+                            </button>
                         </form>
                     }
-                    <form asp-action="Delete" method="post" style="display:inline-block;">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@plant.Id" />
-                        <button type="submit" class="btn btn-sm btn-danger action-btn" onclick="return confirm('Delete this plant?')"><i class="fas fa-trash"></i> Delete</button>
-                    </form>
+                    else
+                    {
+                        <button class="btn btn-sm btn-outline-secondary action-btn" disabled
+                                title="Can only harvest at 100% growth. Currently @plant.GrowthStagePercent%.">
+                            <i class="fas fa-lock"></i> Harvest (@plant.GrowthStagePercent%)
+                        </button>
+                    }
+
+                    @* Delete - Boss only *@
+                    @if (isBoss)
+                    {
+                        <form asp-action="Delete" method="post" style="display:inline-block;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@plant.Id" />
+                            <button type="submit" class="btn btn-sm btn-danger action-btn"
+                                    onclick="return confirm('Permanently delete this plant?')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                    }
                 </div>
             </div>
         }

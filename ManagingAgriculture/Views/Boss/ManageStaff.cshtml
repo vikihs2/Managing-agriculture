@@ -6,9 +6,12 @@
 <div class="container-fluid dashboard-container">
     <div class="row mb-4">
         <div class="col">
-            <h2 class="text-primary"><i class="fas fa-users-cog"></i> Manage Staff & HR</h2>
+            <h2 class="text-primary"><i class="fas fa-users-cog"></i> Manage Staff &amp; HR</h2>
         </div>
-        <div class="col-auto">
+        <div class="col-auto d-flex gap-2">
+             <a asp-action="ManageLeaveRequests" class="btn btn-outline-primary">
+                <i class="fas fa-calendar-check me-1"></i>Leave Requests
+             </a>
              <a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
         </div>
     </div>
@@ -191,10 +194,16 @@
                     <!-- Add Task Form -->
                     <form asp-action="AssignTask" method="post" class="mb-4">
                         <input type="hidden" name="userId" id="taskModalUserId" />
-                        <div class="input-group">
-                            <input type="text" name="description" class="form-control" placeholder="New Task Description..." required>
-                            <button class="btn btn-success" type="submit">Assign Task</button>
+                        <div class="mb-2">
+                            <input type="text" name="description" class="form-control" placeholder="Task Description..." required>
                         </div>
+                        <div class="mb-2">
+                            <select name="machineryId" class="form-select" id="taskMachinerySelect">
+                                <option value="">-- No Machine Required --</option>
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <button class="btn btn-success w-100" type="submit">Assign Task</button>
                     </form>
                     
                     <hr />

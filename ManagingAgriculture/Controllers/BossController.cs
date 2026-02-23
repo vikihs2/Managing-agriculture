@@ -143,13 +143,25 @@ namespace ManagingAgriculture.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AssignTask(string userId, string description)
+        public async Task<IActionResult> AssignTask(string userId, string description, int? machineryId = null)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var emp = await _userManager.FindByIdAsync(userId);
             
             if (emp != null && emp.CompanyId == currentUser.CompanyId)
             {
+                // Check if machinery is already in use
+                if (machineryId.HasValue)
+                {
+                    var machineryInUse = await _context.TaskAssignments
+                        .AnyAsync(t => t.AssignedMachineryId == machineryId && !t.IsApprovedByBoss && t.CompanyId == currentUser.CompanyId);
+                    if (machineryInUse)
+                    {
+                        TempData["Error"] = "That machine is already assigned to an active task.";
+                        return RedirectToAction(nameof(ManageStaff));
+                    }
+                }
+
                 var task = new TaskAssignment
                 {
                     AssignedToUserId = userId,
@@ -157,7 +169,9 @@ namespace ManagingAgriculture.Controllers
                     Description = description,
                     AssignedDate = DateTime.UtcNow,
                     IsCompletedByEmployee = false,
-                    IsApprovedByBoss = false
+                    IsApprovedByBoss = false,
+                    AssignedByUserId = currentUser.Id,
+                    AssignedMachineryId = machineryId
                 };
                 _context.TaskAssignments.Add(task);
                 await _context.SaveChangesAsync();
@@ -418,7 +432,6 @@ namespace ManagingAgriculture.Controllers
             var field = await _context.Fields.FindAsync(id);
             if (field == null || field.CompanyId != currentUser.CompanyId) return NotFound();
 
-            // Only delete if field is not occupied
             if (field.IsOccupied)
             {
                 TempData["Error"] = "Cannot delete an occupied field. Harvest the current plant first.";
@@ -429,6 +442,115 @@ namespace ManagingAgriculture.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(ManageFields));
+        }
+
+        // --- LEAVE REQUEST MANAGEMENT ---
+
+        [HttpGet]
+        public async Task<IActionResult> ManageLeaveRequests()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null || currentUser.CompanyId == null) return Challenge();
+
+            var requests = await _context.LeaveRequests
+                .Include(r => r.User)
+                .Where(r => r.CompanyId == currentUser.CompanyId)
+                .OrderByDescending(r => r.RequestedDate)
+                .ToListAsync();
+
+            return View(requests);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetLeaveRequests()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null || currentUser.CompanyId == null) return Json(new List<object>());
+
+            var requests = await _context.LeaveRequests
+                .Include(r => r.User)
+                .Where(r => r.CompanyId == currentUser.CompanyId && r.Status == "Pending")
+                .OrderBy(r => r.LeaveDate)
+                .Select(r => new {
+                    r.Id,
+                    UserEmail = r.User!.Email,
+                    LeaveDate = r.LeaveDate.ToString("yyyy-MM-dd"),
+                    r.Reason,
+                    r.Status
+                })
+                .ToListAsync();
+
+            return Json(requests);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ApproveLeaveRequest(int requestId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Challenge();
+
+            var request = await _context.LeaveRequests.Include(r => r.User).FirstOrDefaultAsync(r => r.Id == requestId);
+            if (request == null || request.CompanyId != currentUser.CompanyId) return NotFound();
+
+            // Check if date is already taken by another approved leave in that company
+            var alreadyTaken = await _context.LeaveRequests
+                .AnyAsync(r => r.CompanyId == currentUser.CompanyId
+                    && r.LeaveDate.Date == request.LeaveDate.Date
+                    && r.Status == "Approved"
+                    && r.Id != requestId);
+
+            if (alreadyTaken)
+            {
+                TempData["Error"] = $"Cannot approve: another employee already has {request.LeaveDate:d} approved. Only one person can be off per day.";
+                return RedirectToAction(nameof(ManageLeaveRequests));
+            }
+
+            request.Status = "Approved";
+            request.DecidedDate = DateTime.UtcNow;
+
+            // Update employee's used leave days
+            if (request.User != null)
+            {
+                request.User.LeaveDaysUsed++;
+                await _userManager.UpdateAsync(request.User);
+            }
+
+            // Reject all other pending requests for the same date in this company
+            var conflicting = await _context.LeaveRequests
+                .Where(r => r.CompanyId == currentUser.CompanyId
+                    && r.LeaveDate.Date == request.LeaveDate.Date
+                    && r.Status == "Pending"
+                    && r.Id != requestId)
+                .ToListAsync();
+
+            foreach (var conflict in conflicting)
+            {
+                conflict.Status = "Rejected";
+                conflict.DecidedDate = DateTime.UtcNow;
+                conflict.BossNote = "Another employee was approved for this date.";
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"Approved leave for {request.User?.Email} on {request.LeaveDate:d}.";
+            return RedirectToAction(nameof(ManageLeaveRequests));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RejectLeaveRequest(int requestId, string? note)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Challenge();
+
+            var request = await _context.LeaveRequests.FindAsync(requestId);
+            if (request == null || request.CompanyId != currentUser.CompanyId) return NotFound();
+
+            request.Status = "Rejected";
+            request.DecidedDate = DateTime.UtcNow;
+            request.BossNote = note;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Leave request rejected.";
+            return RedirectToAction(nameof(ManageLeaveRequests));
         }
     }
 }

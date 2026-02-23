@@ -1,0 +1,84 @@
+@model ManagingAgriculture.Models.Field
+@{
+    ViewData["Title"] = "Add Field";
+}
+
+<div class="dashboard-container">
+    <div class="card mx-auto shadow border-0" style="max-width: 680px;">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #2d6a4f, #40916c);">
+            <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add New Field</h4>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:none;"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label fw-bold">Field Name</label>
+                    <input asp-for="Name" class="form-control" placeholder="e.g. North Field A" required />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="SizeInDecars" class="form-label fw-bold">Size (Decars)</label>
+                        <input asp-for="SizeInDecars" class="form-control" type="number" step="0.1" min="0.1" placeholder="e.g. 5.5" required />
+                        <span asp-validation-for="SizeInDecars" class="text-danger small"></span>
+                        <small class="text-muted">1 decar = 1000 m²</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="City" class="form-label fw-bold">City / Location</label>
+                        <input asp-for="City" class="form-control" placeholder="e.g. Plovdiv" required />
+                        <span asp-validation-for="City" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label asp-for="SoilType" class="form-label fw-bold">Soil Type</label>
+                        <select asp-for="SoilType" class="form-select" required>
+                            <option value="">-- Select soil type --</option>
+                            <option value="Clay">Clay</option>
+                            <option value="Loamy">Loamy</option>
+                            <option value="Sandy">Sandy</option>
+                            <option value="Silty">Silty</option>
+                            <option value="Peaty">Peaty</option>
+                            <option value="Chalky">Chalky</option>
+                        </select>
+                        <span asp-validation-for="SoilType" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="SunlightExposure" class="form-label fw-bold">Sunlight Exposure</label>
+                        <select asp-for="SunlightExposure" class="form-select" required>
+                            <option value="">-- Select sunlight --</option>
+                            <option value="Full Sun">Full Sun</option>
+                            <option value="Partial Shade">Partial Shade</option>
+                            <option value="Shade">Shade</option>
+                        </select>
+                        <span asp-validation-for="SunlightExposure" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label asp-for="AverageTemperatureCelsius" class="form-label fw-bold">Average Temperature (°C)</label>
+                    <input asp-for="AverageTemperatureCelsius" class="form-control" type="number" step="0.5" placeholder="e.g. 18.5" required />
+                    <span asp-validation-for="AverageTemperatureCelsius" class="text-danger small"></span>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <a asp-action="Index" class="btn btn-secondary flex-grow-1">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success flex-grow-1">
+                        <i class="fas fa-save me-1"></i>Create Field
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

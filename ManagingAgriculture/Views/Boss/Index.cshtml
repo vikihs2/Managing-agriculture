@@ -3,38 +3,103 @@
 }
 
 <div class="dashboard-container">
-    <div class="page-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2>👑 Boss Panel</h2>
-            <p class="subtitle">Manage everything in your company</p>
+            <p class="subtitle mb-0">Full control over your company operations</p>
         </div>
+        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-chart-bar me-1"></i>Dashboard
+        </a>
     </div>
 
-    <div class="row">
+    <div class="row g-4">
+        <!-- Company Settings -->
         <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Company Settings</h5>
-                    <p class="card-text">Manage company details.</p>
-                    <a asp-action="ManageCompany" class="btn btn-primary">Manage Company</a>
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #1d4e89, #2874a6);">
+                    <h5 class="mb-0"><i class="fas fa-building me-2"></i>Company</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted">Manage your company details, logo, and settings.</p>
+                    <a asp-action="ManageCompany" class="btn btn-primary mt-auto">
+                        <i class="fas fa-cog me-1"></i>Company Settings
+                    </a>
                 </div>
             </div>
         </div>
+
+        <!-- Staff -->
         <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Employees</h5>
-                    <p class="card-text">Invite and manage staff.</p>
-                    <a asp-action="ManageStaff" class="btn btn-primary">Manage Staff</a>
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #1b4332, #2d6a4f);">
+                    <h5 class="mb-0"><i class="fas fa-users-cog me-2"></i>Staff & HR</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted">Invite employees and managers, set salaries, and manage tasks.</p>
+                    <a asp-action="ManageStaff" class="btn btn-success mt-auto">
+                        <i class="fas fa-users me-1"></i>Manage Staff
+                    </a>
                 </div>
             </div>
         </div>
+
+        <!-- Leave Requests -->
         <div class="col-md-4">
-             <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Farm Operations</h5>
-                    <p class="card-text">Full access to all resources.</p>
-                    <a href="/Dashboard" class="btn btn-success">Go to Main Dashboard</a>
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #9b59b6, #7d3c98);">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Leave Requests</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted">Approve or reject employee/manager day-off requests.</p>
+                    <a asp-action="ManageLeaveRequests" class="btn mt-auto" style="background-color: #9b59b6; color: white;">
+                        <i class="fas fa-calendar-alt me-1"></i>View Requests
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fields -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #d35400, #e67e22);">
+                    <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Fields</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted">Add, edit and delete farm fields. Required for plant tracking.</p>
+                    <a asp-controller="Fields" asp-action="Index" class="btn btn-warning text-dark mt-auto">
+                        <i class="fas fa-map me-1"></i>Manage Fields
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Farm Operations -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #117a65, #1abc9c);">
+                    <h5 class="mb-0"><i class="fas fa-tractor me-2"></i>Farm Operations</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted">Access plant tracking, resources, machinery, and marketplace.</p>
+                    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-info text-white mt-auto">
+                        <i class="fas fa-chart-bar me-1"></i>Go to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marketplace (Boss can buy/sell) -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #c0392b, #e74c3c);">
+                    <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Marketplace</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted">Only the boss can buy/sell on the marketplace on behalf of the company.</p>
+                    <a asp-controller="Marketplace" asp-action="Index" class="btn btn-danger text-white mt-auto">
+                        <i class="fas fa-store me-1"></i>Marketplace
+                    </a>
                 </div>
             </div>
         </div>
