@@ -24,7 +24,6 @@
                         <option value="Chemical">Chemical</option>
                         <option value="Water">Water</option>
                         <option value="Fuel">Fuel</option>
-                        <option value="Other">Other</option>
                     </select>
                 </div>
                 <div class="mb-3">
@@ -32,8 +31,19 @@
                     <input asp-for="Quantity" class="form-control" />
                 </div>
                 <div class="mb-3">
-                    <label asp-for="Unit" class="form-label">Unit</label>
-                    <input asp-for="Unit" class="form-control" />
+                    <label asp-for="Unit" class="form-label">Unit of Measure</label>
+                    <select asp-for="Unit" class="form-select">
+                        <option value="kg">kg</option>
+                        <option value="g">g</option>
+                        <option value="tons">tons</option>
+                        <option value="liters">liters</option>
+                        <option value="ml">ml</option>
+                        <option value="m³">m³</option>
+                        <option value="pieces">pieces</option>
+                        <option value="units">units</option>
+                        <option value="bags">bags</option>
+                        <option value="boxes">boxes</option>
+                    </select>
                 </div>
                 <div class="mb-3">
                     <label asp-for="LowStockThreshold" class="form-label">Low Stock Threshold</label>

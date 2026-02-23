@@ -1,6 +1,11 @@
 @model IEnumerable<ManagingAgriculture.Models.Machinery>
 @{
     ViewData["Title"] = "Machinery Management";
+    bool isBoss = User.IsInRole("Boss");
+    bool isManager = User.IsInRole("Manager");
+    bool isEmployee = User.IsInRole("Employee");
+    // Only Boss can edit/delete/add machinery
+    bool canManage = isBoss;
 }
 
 <div class="machinery-container">
@@ -60,17 +65,21 @@
                         <span class="service-days">@serviceUrgency</span>
                     </div>
                 </div>
-                <div class="machinery-actions">
-                    <a href="@Url.Action("Edit", "Machinery", new { id = machinery.Id })" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-edit"></i> Edit
-                    </a>
-                    <form method="post" action="@Url.Action("Delete", "Machinery")" style="display: inline-block;">
-                        <input type="hidden" name="id" value="@machinery.Id" />
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </form>
-                </div>
+                @* Only Boss can edit/delete machinery *@
+                @if (canManage)
+                {
+                    <div class="machinery-actions">
+                        <a href="@Url.Action("Edit", "Machinery", new { id = machinery.Id })" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <form method="post" action="@Url.Action("Delete", "Machinery")" style="display: inline-block;">
+                            <input type="hidden" name="id" value="@machinery.Id" />
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                }
             </div>
         }
     </div>

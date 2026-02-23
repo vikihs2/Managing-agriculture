@@ -25,5 +25,8 @@ namespace ManagingAgriculture.Models
         public bool IsReplied { get; set; } = false;
         public DateTime? RepliedDate { get; set; }
         public string? RepliedBy { get; set; } // "Admin" or "IT" or UserID
+
+        // Tracking for notification badge
+        public bool IsReadByUser { get; set; } = false;
     }
 }

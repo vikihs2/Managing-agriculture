@@ -30,6 +30,16 @@ namespace ManagingAgriculture.Controllers
                 .OrderByDescending(m => m.CreatedDate)
                 .ToListAsync();
 
+            // Mark all replied messages as read (clears the notification badge)
+            foreach (var msg in messages.Where(m => m.IsReplied && !m.IsReadByUser))
+            {
+                msg.IsReadByUser = true;
+            }
+            if (messages.Any())
+            {
+                await _context.SaveChangesAsync();
+            }
+
             return View(messages);
         }
     }

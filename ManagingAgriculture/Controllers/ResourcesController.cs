@@ -63,6 +63,12 @@ namespace ManagingAgriculture.Controllers
         [HttpGet]
         public IActionResult Add()
         {
+            // Only Boss and Manager can add resources
+            if (User.IsInRole("Employee"))
+            {
+                TempData["Error"] = "Employees cannot add resources.";
+                return RedirectToAction("Index");
+            }
             ViewData["Title"] = "Add Resource";
             return View(new Resource());
         }
@@ -71,6 +77,13 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(Resource model)
         {
+            // Only Boss and Manager can add resources
+            if (User.IsInRole("Employee"))
+            {
+                TempData["Error"] = "Employees cannot add resources.";
+                return RedirectToAction("Index");
+            }
+
             if (!ModelState.IsValid)
                 return View(model);
 
@@ -93,6 +106,12 @@ namespace ManagingAgriculture.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
+            // Only Boss and Manager can edit resources
+            if (User.IsInRole("Employee"))
+            {
+                TempData["Error"] = "Employees cannot edit resources.";
+                return RedirectToAction("Index");
+            }
             var item = await _context.Resources.FindAsync(id);
             if (item == null) return NotFound();
             return View(item);
@@ -102,6 +121,13 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Resource model)
         {
+            // Only Boss and Manager can edit
+            if (User.IsInRole("Employee"))
+            {
+                TempData["Error"] = "Employees cannot edit resources.";
+                return RedirectToAction("Index");
+            }
+
             if (id != model.Id) return NotFound();
 
             if (!ModelState.IsValid) return View(model);
@@ -130,6 +156,29 @@ namespace ManagingAgriculture.Controllers
 
             return RedirectToAction("Index");
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            // Only Boss can delete resources
+            if (!User.IsInRole("Boss"))
+            {
+                TempData["Error"] = "Only the Boss can delete resources.";
+                return RedirectToAction("Index");
+            }
+
+            var item = await _context.Resources.FindAsync(id);
+            if (item != null)
+            {
+                _context.Resources.Remove(item);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Resource deleted successfully.";
+            }
+            return RedirectToAction("Index");
+        }
+
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]

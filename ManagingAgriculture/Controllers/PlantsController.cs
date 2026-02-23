@@ -147,29 +147,37 @@ namespace ManagingAgriculture.Controllers
                 return RedirectToAction("Add");
             }
 
-            // RESOURCE VALIDATION
-            var requiredResources = GetRequiredResources(model.CropType, field.SizeInDecars);
-            var insufficientResources = new List<string>();
+            // RESOURCE VALIDATION - Only check Seeds (category = "Seed")
+            var seedRequirementKg = GetSeedRequirementKg(model.CropType, field.SizeInDecars);
 
-            foreach (var requiredResource in requiredResources)
+            if (seedRequirementKg > 0)
             {
-                var resource = await _context.Resources
-                    .FirstOrDefaultAsync(r =>
-                        r.Name.ToLower() == requiredResource.Name.ToLower() &&
-                        (r.CompanyId == currentUser.CompanyId || (r.CompanyId == null && r.OwnerUserId == currentUser.Id)));
+                // Find a Seed resource that matches (look for any resource in Seed category)
+                var seedResource = await _context.Resources
+                    .Where(r =>
+                        r.Category == "Seed" &&
+                        (r.CompanyId == currentUser.CompanyId || (r.CompanyId == null && r.OwnerUserId == currentUser.Id)))
+                    .FirstOrDefaultAsync();
 
-                if (resource == null || resource.Quantity < requiredResource.Quantity)
+                // Convert requirement to the unit stored in the resource
+                decimal requiredAmount = ConvertSeedRequirement(seedRequirementKg, seedResource?.Unit ?? "kg");
+
+                if (seedResource == null || seedResource.Quantity < requiredAmount)
                 {
-                    insufficientResources.Add($"{requiredResource.Name} (Need {requiredResource.Quantity}{requiredResource.Unit}, Have {resource?.Quantity ?? 0}{requiredResource.Unit})");
+                    decimal have = seedResource?.Quantity ?? 0;
+                    string unit = seedResource?.Unit ?? "kg";
+                    TempData["Error"] = $"Not enough seeds to plant {model.CropType} on a {field.SizeInDecars} decar field. " +
+                        $"Need {requiredAmount:N1} {unit} of seeds, but only have {have:N1} {unit}. " +
+                        $"Please add more seeds in the Resources section (Category: Seed).";
+                    ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
+                    ViewBag.Fields = await GetUserFields(currentUser, unoccupiedOnly: true);
+                    return View(model);
                 }
-            }
 
-            if (insufficientResources.Any())
-            {
-                TempData["Error"] = $"Not enough resources to plant {model.CropType} on a {field.SizeInDecars} decar field: " + string.Join(", ", insufficientResources);
-                ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
-                ViewBag.Fields = await GetUserFields(currentUser, unoccupiedOnly: true);
-                return View(model);
+                // Deduct seeds from resource
+                seedResource.Quantity -= requiredAmount;
+                seedResource.UpdatedDate = System.DateTime.Now;
+                _context.Resources.Update(seedResource);
             }
 
             // Use CurrentTrackingDate if provided, otherwise use today
@@ -219,6 +227,7 @@ namespace ManagingAgriculture.Controllers
             return RedirectToAction("Index");
         }
 
+
         // Helper method to get required resources for a crop type and field size
         private List<(string Name, decimal Quantity, string Unit)> GetRequiredResources(string cropType, decimal fieldSizeDecars)
         {
@@ -262,6 +271,65 @@ namespace ManagingAgriculture.Controllers
 
             return resources;
         }
+
+        /// <summary>
+        /// Returns the required seed quantity in kg per decar for a given crop type.
+        /// Multiplied by field size to get total seed needed.
+        /// </summary>
+        private decimal GetSeedRequirementKg(string cropType, decimal fieldSizeDecars)
+        {
+            var seedPerDecar = new Dictionary<string, decimal>
+            {
+                // Grains
+                { "Wheat", 200 }, { "Corn (Maize)", 25 }, { "Rice", 150 }, { "Barley", 180 },
+                { "Oats", 150 }, { "Rye", 180 }, { "Sorghum", 10 }, { "Millet", 15 },
+                // Root & Tuber
+                { "Potato", 200 }, { "Sweet Potato", 250 }, { "Carrot", 8 }, { "Beetroot", 20 },
+                { "Turnip", 5 }, { "Radish", 8 }, { "Cassava", 20 },
+                // Vegetables
+                { "Tomato", 0.5m }, { "Cucumber", 2 }, { "Bell Pepper", 0.3m }, { "Chili Pepper", 0.3m },
+                { "Eggplant", 0.3m }, { "Onion", 20 }, { "Garlic", 200 }, { "Lettuce", 1 },
+                { "Spinach", 2 }, { "Cabbage", 0.5m }, { "Broccoli", 0.3m }, { "Cauliflower", 0.3m },
+                { "Zucchini", 2 },
+                // Legumes
+                { "Beans (Green Beans)", 15 }, { "Peas", 80 }, { "Lentils", 100 },
+                { "Chickpeas", 100 }, { "Soybean", 80 },
+                // Fruits
+                { "Strawberry", 1 }, { "Watermelon", 3 }, { "Melon", 2 }, { "Pumpkin", 3 }, { "Squash", 3 },
+                // Industrial
+                { "Sunflower", 20 }, { "Rapeseed (Canola)", 10 }, { "Cotton", 10 },
+                { "Sugar Beet", 25 }, { "Sugarcane", 30 },
+                // Herbs
+                { "Basil", 0.1m }, { "Parsley", 0.2m }, { "Dill", 0.2m }, { "Mint", 0.5m },
+                { "Oregano", 0.2m }, { "Thyme", 0.1m },
+                // Perennial
+                { "Alfalfa", 30 }, { "Clover", 25 }, { "Tobacco", 0.1m }
+            };
+
+            if (seedPerDecar.TryGetValue(cropType, out var perDecar))
+                return perDecar * fieldSizeDecars;
+
+            // Default: 10 kg per decar for unknown crops
+            return 10 * fieldSizeDecars;
+        }
+
+        /// <summary>
+        /// Converts seed requirement from kg to the unit stored in the resource.
+        /// </summary>
+        private decimal ConvertSeedRequirement(decimal requirementKg, string unit)
+        {
+            return unit switch
+            {
+                "g"     => requirementKg * 1000m,
+                "tons"  => requirementKg / 1000m,
+                "bags"  => requirementKg / 25m,  // assume 25 kg per bag
+                "boxes" => requirementKg / 10m,  // assume 10 kg per box
+                "pieces" or "units" => requirementKg * 10m, // rough: seed pieces
+                _       => requirementKg // kg, liters, ml, m³ etc. – treat as 1:1
+            };
+        }
+
+
 
         // Helper: calculate estimated yield in kg based on crop type and field size
         private decimal CalculateYield(string cropType, decimal fieldSizeDecars)

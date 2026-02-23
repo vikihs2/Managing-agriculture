@@ -2,6 +2,11 @@
 @{
     ViewData["Title"] = "Resource Management";
     var selectedCategory = ViewBag.SelectedCategory;
+    bool isEmployee = User.IsInRole("Employee");
+    bool isManager = User.IsInRole("Manager");
+    bool isBoss = User.IsInRole("Boss");
+    // Only boss/manager can edit; employees can only adjust quantity
+    bool canEdit = !isEmployee;
 }
 
 <div class="resources-container">
@@ -20,6 +25,21 @@
         <a href="@Url.Action("Index", "Resources", new { category = "Water" })" class="tab-btn @(selectedCategory == "Water" ? "active" : "")">Water</a>
         <a href="@Url.Action("Index", "Resources", new { category = "Fuel" })" class="tab-btn @(selectedCategory == "Fuel" ? "active" : "")">Fuel</a>
     </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mx-3">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mx-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
     <!-- Resources Grid -->
     <div class="resources-grid">
@@ -77,10 +97,26 @@
                         <span>Restock needed soon</span>
                     </div>
                 }
-                <div class="mt-3 d-flex gap-2 action-row">
-                    <a class="btn btn-sm btn-outline-primary action-btn" href="@Url.Action("Edit","Resources", new { id = resource.Id })"><i class="fas fa-edit"></i> Edit</a>
-                    <button class="btn btn-sm btn-add action-btn adjust-ajax" data-id="@resource.Id" data-delta="10"><i class="fas fa-plus"></i> + Add 10</button>
-                    <button class="btn btn-sm btn-danger action-btn adjust-ajax" data-id="@resource.Id" data-delta="-10"><i class="fas fa-trash"></i> - Use 10</button>
+                <div class="mt-3 d-flex gap-2 action-row flex-wrap">
+                    @* Edit - Boss or Manager only *@
+                    @if (canEdit)
+                    {
+                        <a class="btn btn-sm btn-outline-primary action-btn" href="@Url.Action("Edit","Resources", new { id = resource.Id })"><i class="fas fa-edit"></i> Edit</a>
+                    }
+                    @* +10/-10 buttons for all roles *@
+                    <button class="btn btn-sm btn-add action-btn adjust-ajax" data-id="@resource.Id" data-delta="10"><i class="fas fa-plus"></i> +Add 10</button>
+                    <button class="btn btn-sm btn-danger action-btn adjust-ajax" data-id="@resource.Id" data-delta="-10"><i class="fas fa-minus"></i> -Use 10</button>
+                    @* Delete - Boss only *@
+                    @if (isBoss)
+                    {
+                        <form method="post" action="@Url.Action("Delete","Resources")" style="display:inline-block;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@resource.Id" />
+                            <button type="submit" class="btn btn-sm btn-danger action-btn" onclick="return confirm('Delete this resource?')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                    }
                 </div>
             </div>
         }

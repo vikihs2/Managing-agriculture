@@ -138,7 +138,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Companies");
+                    b.ToTable("Companies", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.CompanyInvitation", b =>
@@ -180,7 +180,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("CompanyInvitations");
+                    b.ToTable("CompanyInvitations", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.ContactForm", b =>
@@ -221,7 +221,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ContactForms");
+                    b.ToTable("ContactForms", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.Field", b =>
@@ -284,7 +284,7 @@ namespace ManagingAgriculture.Migrations
                         .IsUnique()
                         .HasFilter("[CurrentPlantId] IS NOT NULL");
 
-                    b.ToTable("Fields");
+                    b.ToTable("Fields", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.HarvestRecord", b =>
@@ -332,7 +332,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("HarvestRecords");
+                    b.ToTable("HarvestRecords", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.LeaveRecord", b =>
@@ -361,7 +361,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("LeaveRecords");
+                    b.ToTable("LeaveRecords", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.LeaveRequest", b =>
@@ -407,7 +407,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("LeaveRequests");
+                    b.ToTable("LeaveRequests", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.Machinery", b =>
@@ -464,7 +464,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("Machinery");
+                    b.ToTable("Machinery", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.MaintenanceHistory", b =>
@@ -496,7 +496,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("MachineryId");
 
-                    b.ToTable("MaintenanceHistory");
+                    b.ToTable("MaintenanceHistory", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.MarketplaceListing", b =>
@@ -576,7 +576,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("MachineryId");
 
-                    b.ToTable("MarketplaceListings");
+                    b.ToTable("MarketplaceListings", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.MarketplacePurchaseRequest", b =>
@@ -620,7 +620,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("ListingId");
 
-                    b.ToTable("MarketplacePurchaseRequests");
+                    b.ToTable("MarketplacePurchaseRequests", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.Plant", b =>
@@ -693,7 +693,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("FieldId");
 
-                    b.ToTable("Plants");
+                    b.ToTable("Plants", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.Resource", b =>
@@ -745,7 +745,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("Resources");
+                    b.ToTable("Resources", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.ResourceUsage", b =>
@@ -781,7 +781,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("ResourceId");
 
-                    b.ToTable("ResourceUsages");
+                    b.ToTable("ResourceUsages", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.Sensor", b =>
@@ -822,7 +822,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("Sensors");
+                    b.ToTable("Sensors", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.SensorReading", b =>
@@ -849,7 +849,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("SensorId");
 
-                    b.ToTable("SensorReadings");
+                    b.ToTable("SensorReadings", (string)null);
                 });
 
             modelBuilder.Entity("ManagingAgriculture.Models.TaskAssignment", b =>
@@ -897,7 +897,7 @@ namespace ManagingAgriculture.Migrations
 
                     b.HasIndex("AssignedToUserId");
 
-                    b.ToTable("TaskAssignments");
+                    b.ToTable("TaskAssignments", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

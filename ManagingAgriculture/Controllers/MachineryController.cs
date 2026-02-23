@@ -68,6 +68,12 @@ namespace ManagingAgriculture.Controllers
         [HttpGet]
         public IActionResult Add()
         {
+            // Only Boss can add machinery
+            if (!User.IsInRole("Boss"))
+            {
+                TempData["Error"] = "Only the Boss can add machinery.";
+                return RedirectToAction(nameof(Index));
+            }
             return View(new Machinery());
         }
 
@@ -81,6 +87,13 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(Machinery machinery)
         {
+            // Only Boss can add machinery
+            if (!User.IsInRole("Boss"))
+            {
+                TempData["Error"] = "Only the Boss can add machinery.";
+                return RedirectToAction(nameof(Index));
+            }
+
             // Validate model state
             if (!ModelState.IsValid)
             {
@@ -122,6 +135,12 @@ namespace ManagingAgriculture.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
+            // Only Boss can edit machinery
+            if (!User.IsInRole("Boss"))
+            {
+                TempData["Error"] = "Only the Boss can edit machinery.";
+                return RedirectToAction(nameof(Index));
+            }
             // Find machinery by ID
             var machinery = await _context.Machinery.FindAsync(id);
 
@@ -144,6 +163,13 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Machinery machinery)
         {
+            // Only Boss can edit machinery
+            if (!User.IsInRole("Boss"))
+            {
+                TempData["Error"] = "Only the Boss can edit machinery.";
+                return RedirectToAction(nameof(Index));
+            }
+
             if (id != machinery.Id)
             {
                 return NotFound();
@@ -208,6 +234,13 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
+            // Only Boss can delete machinery
+            if (!User.IsInRole("Boss"))
+            {
+                TempData["Error"] = "Only the Boss can delete machinery.";
+                return RedirectToAction(nameof(Index));
+            }
+
             // Find and remove machinery from database
             var machinery = await _context.Machinery.FindAsync(id);
 

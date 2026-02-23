@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using ManagingAgriculture.Models;
 using ManagingAgriculture.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace ManagingAgriculture.Controllers
 {
@@ -18,10 +19,12 @@ namespace ManagingAgriculture.Controllers
     public class MarketplaceController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public MarketplaceController(ApplicationDbContext context)
+        public MarketplaceController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         /// <summary>
@@ -55,6 +58,21 @@ namespace ManagingAgriculture.Controllers
             ViewBag.SelectedCategory = category ?? "All";
             ViewBag.Query = q ?? string.Empty;
 
+            // Get purchased listing IDs for the current user
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var purchased = await _context.MarketplacePurchaseRequests
+                    .Where(r => r.BuyerUserId == user.Id && r.Status == "Purchased")
+                    .Select(r => r.ListingId)
+                    .ToListAsync();
+                ViewBag.PurchasedListingIds = new HashSet<int>(purchased);
+            }
+            else
+            {
+                ViewBag.PurchasedListingIds = new HashSet<int>();
+            }
+
             return View(results);
         }
 
@@ -79,6 +97,22 @@ namespace ManagingAgriculture.Controllers
             }
 
             var results = await query.OrderByDescending(l => l.CreatedDate).ToListAsync();
+
+            // Pass purchased IDs
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var purchased = await _context.MarketplacePurchaseRequests
+                    .Where(r => r.BuyerUserId == user.Id && r.Status == "Purchased")
+                    .Select(r => r.ListingId)
+                    .ToListAsync();
+                ViewBag.PurchasedListingIds = new HashSet<int>(purchased);
+            }
+            else
+            {
+                ViewBag.PurchasedListingIds = new HashSet<int>();
+            }
+
             return PartialView("_Grid", results);
         }
 
@@ -211,6 +245,67 @@ namespace ManagingAgriculture.Controllers
 
             // Redirect to marketplace list view
             return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>
+        /// Buy a marketplace listing - adds it to the buyer's machinery
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Buy(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var listing = await _context.MarketplaceListings.FindAsync(id);
+            if (listing == null)
+            {
+                TempData["Error"] = "Listing not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Check not already purchased by this user
+            var alreadyBought = await _context.MarketplacePurchaseRequests
+                .AnyAsync(r => r.BuyerUserId == user.Id && r.ListingId == id && r.Status == "Purchased");
+            if (alreadyBought)
+            {
+                TempData["Error"] = "You have already purchased this item.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Create a machinery record for the buyer
+            var machine = new Machinery
+            {
+                Name = listing.ItemName,
+                Type = listing.Category,
+                Status = listing.ConditionStatus,
+                EngineHours = listing.EngineHours,
+                PurchasePrice = listing.SalePrice,
+                PurchaseDate = DateTime.UtcNow,
+                CompanyId = user.CompanyId.HasValue ? user.CompanyId : null,
+                OwnerUserId = user.CompanyId == null ? user.Id : null,
+                CreatedDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow
+            };
+            _context.Machinery.Add(machine);
+
+            // Record the purchase
+            var purchase = new MarketplacePurchaseRequest
+            {
+                ListingId = id,
+                BuyerUserId = user.Id,
+                BuyerCompanyId = user.CompanyId,
+                BuyerName = user.Email ?? "",
+                RequestedDate = DateTime.UtcNow,
+                Status = "Purchased"
+            };
+            _context.MarketplacePurchaseRequests.Add(purchase);
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"🛒 '{listing.ItemName}' has been purchased and added to your machinery!";
+            return RedirectToAction(nameof(Index));
+
         }
 
         /// <summary>

@@ -2001,3 +2001,56 @@ body.dark-mode .close,
 body.dark-mode .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
+
+/* Inbox unread badge */
+.inbox-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #dc3545;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 17px;
+  height: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  border: 2px solid var(--primary-color);
+  z-index: 10;
+}
+
+/* Sidebar: show badge even in collapsed mode */
+.sidebar .menu-item {
+  position: relative;
+}
+
+/* Marketplace Buy button */
+.btn-buy {
+  background: #0d6efd !important;
+  border-color: #0d6efd !important;
+  color: #fff !important;
+}
+.btn-buy:hover {
+  background: #0b5ed7 !important;
+  border-color: #0b5ed7 !important;
+}
+
+/* Purchased overlay */
+.purchased-overlay {
+  background: linear-gradient(135deg, rgba(25,135,84,0.1), rgba(25,135,84,0.05));
+  border: 2px solid #198754 !important;
+}
+.purchased-badge {
+  background: #198754;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 8px;
+}

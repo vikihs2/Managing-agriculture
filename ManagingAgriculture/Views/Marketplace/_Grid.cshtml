@@ -1,4 +1,16 @@
 @model IEnumerable<ManagingAgriculture.Models.MarketplaceListing>
+@{
+    bool isBoss = User.IsInRole("Boss");
+    bool isManager = User.IsInRole("Manager");
+    bool isEmployee = User.IsInRole("Employee");
+    // Only Boss can edit/delete marketplace listings
+    bool canManage = isBoss;
+    // Everyone can buy (Boss, Manager, Employee)
+    bool canBuy = User?.Identity?.IsAuthenticated == true;
+    
+    // Get list of purchased listing IDs for this user from ViewBag (set by controller)
+    var purchasedIds = ViewBag.PurchasedListingIds as HashSet<int> ?? new HashSet<int>();
+}
 
 <div class="marketplace-grid">
     @foreach (var listing in Model)
@@ -21,7 +33,13 @@
             _ => "good"
         };
 
-        <div class="marketplace-card">
+        bool isPurchased = purchasedIds.Contains(listing.Id);
+
+        <div class="marketplace-card @(isPurchased ? "purchased-overlay" : "")">
+            @if (isPurchased)
+            {
+                <div class="purchased-badge">✅ Purchased</div>
+            }
             @if (!string.IsNullOrEmpty(listing.ImageUrl))
             {
                 <img src="@listing.ImageUrl" class="marketplace-img" alt="@listing.ItemName" />
@@ -63,16 +81,33 @@
                 </div>
 
                 <div class="listing-contact-row">
-                    <div class="action-buttons">
-                        <a href="@Url.Action("Edit", "Marketplace", new { id = listing.Id })" class="btn btn-sm btn-outline-primary action-btn">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                        <form method="post" action="@Url.Action("Delete", "Marketplace")" style="display: inline-block;">
-                            <input type="hidden" name="id" value="@listing.Id" />
-                            <button type="submit" class="btn btn-sm btn-danger action-btn" onclick="return confirm('Are you sure?')">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </form>
+                    <div class="action-buttons d-flex gap-2 flex-wrap">
+                        @* Only Boss can edit/delete *@
+                        @if (canManage)
+                        {
+                            <a href="@Url.Action("Edit", "Marketplace", new { id = listing.Id })" class="btn btn-sm btn-outline-primary action-btn">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <form method="post" action="@Url.Action("Delete", "Marketplace")" style="display: inline-block;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@listing.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger action-btn" onclick="return confirm('Are you sure?')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </form>
+                        }
+
+                        @* Buy button - available to all authenticated users if not already purchased *@
+                        @if (canBuy && !isPurchased && (listing.ListingType == "Sale" || listing.ListingType == "Both"))
+                        {
+                            <form method="post" action="@Url.Action("Buy", "Marketplace")" style="display: inline-block;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@listing.Id" />
+                                <button type="submit" class="btn btn-sm btn-buy action-btn" onclick="return confirm('Buy @listing.ItemName for $@listing.SalePrice? It will be added to your machinery.')">
+                                    <i class="fas fa-shopping-cart"></i> Buy
+                                </button>
+                            </form>
+                        }
                     </div>
                     <span class="seller-phone"><i class="fas fa-phone"></i> @listing.SellerPhone</span>
                 </div>

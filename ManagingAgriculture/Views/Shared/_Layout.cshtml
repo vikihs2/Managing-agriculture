@@ -1,5 +1,7 @@
+@using Microsoft.EntityFrameworkCore
 @inject Microsoft.AspNetCore.Identity.UserManager<ManagingAgriculture.Models.ApplicationUser> UserManager
 @inject ManagingAgriculture.Data.ApplicationDbContext DbContext
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,6 +21,7 @@
         string companyName = "";
         string welcomeName = "User";
         string userEmail = "";
+        int unreadCount = 0;
 
         if (User?.Identity?.IsAuthenticated == true)
         {
@@ -46,7 +49,33 @@
                     welcomeName = "IT Support";
                 else if (User.IsInRole("Boss"))
                     welcomeName = "Boss";
+
+                // Calculate unread inbox count
+                if (User.IsInRole("SystemAdmin") || User.IsInRole("ITSupport"))
+                {
+                    // Admin/IT: count unreplied messages
+                    unreadCount = await DbContext.ContactForms
+                        .CountAsync(m => !m.IsReplied);
+                }
+                else
+                {
+                    // Regular user: count replies they haven't read
+                    unreadCount = await DbContext.ContactForms
+                        .CountAsync(m => m.Email == userEmail && m.IsReplied && !m.IsReadByUser);
+                }
             }
+        }
+
+        // Determine if Add button should show
+        bool isEmployee = User.IsInRole("Employee");
+        bool isManager = User.IsInRole("Manager");
+        bool canAddToPage = false;
+        if (new[] { "Plants", "Resources", "Machinery", "Marketplace" }.Contains(controller))
+        {
+            if (controller == "Plants" && !isEmployee) canAddToPage = true;
+            else if (controller == "Resources" && !isEmployee) canAddToPage = true;
+            else if (controller == "Machinery" && !isEmployee && !isManager) canAddToPage = true;
+            else if (controller == "Marketplace" && !isEmployee && !isManager && User.IsInRole("Boss")) canAddToPage = true;
         }
     }
 
@@ -122,7 +151,7 @@
                     {
                         <p class="menu-title">My Panel</p>
                         <a href="@Url.Action("Index", "Employee")" class="menu-item">
-                            <i class="fas fa-user-hard-hat"></i>
+                            <i class="fas fa-hard-hat"></i>
                             <span>Employee Panel</span>
                         </a>
                     }
@@ -147,9 +176,13 @@
                     <p class="menu-title">Account</p>
                     @if (User?.Identity?.IsAuthenticated == true)
                     {
-                        <a href="@Url.Action("Index", "Inbox")" class="menu-item">
+                        <a href="@Url.Action("Index", "Inbox")" class="menu-item" style="position:relative;">
                             <i class="fas fa-envelope"></i>
                             <span>Inbox</span>
+                            @if (unreadCount > 0)
+                            {
+                                <span class="inbox-badge">@(unreadCount > 9 ? "9+" : unreadCount.ToString())</span>
+                            }
                         </a>
                         <form asp-controller="Account" asp-action="Logout" method="post" class="menu-item" style="display:flex;align-items:center;gap:8px;">
                             @Html.AntiForgeryToken()
@@ -175,8 +208,8 @@
 
                         @if (new[] { "Plants", "Resources", "Machinery", "Marketplace" }.Contains(controller))
                         {
-                            <!-- On resource pages show Add + Home -->
-                            @if (controller != "Plants" || !User.IsInRole("Employee"))
+                            @* Show Add button only for roles that can add to this page *@
+                            @if (canAddToPage)
                             {
                                 <a class="btn btn-add me-2" href="@Url.Action("Add", controller)">
                                     <i class="fas fa-plus"></i> Add
