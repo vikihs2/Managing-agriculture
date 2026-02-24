@@ -69,13 +69,18 @@
         // Determine if Add button should show
         bool isEmployee = User.IsInRole("Employee");
         bool isManager = User.IsInRole("Manager");
+        bool isBoss    = User.IsInRole("Boss");
+        bool isAdminRole = User.IsInRole("SystemAdmin");
+        bool isITRole    = User.IsInRole("ITSupport");
+        bool isCompanyRole = isEmployee || isManager || isBoss;
+        bool isNonCompanyUser = !isCompanyRole; // User/Admin/IT are not company-role users
         bool canAddToPage = false;
         if (new[] { "Plants", "Resources", "Machinery", "Marketplace" }.Contains(controller))
         {
-            if (controller == "Plants" && !isEmployee) canAddToPage = true;
-            else if (controller == "Resources" && !isEmployee) canAddToPage = true;
-            else if (controller == "Machinery" && !isEmployee && !isManager) canAddToPage = true;
-            else if (controller == "Marketplace" && !isEmployee && !isManager && User.IsInRole("Boss")) canAddToPage = true;
+            if (controller == "Plants" && (!isEmployee || isNonCompanyUser)) canAddToPage = true;
+            else if (controller == "Resources" && (!isEmployee || isNonCompanyUser)) canAddToPage = true;
+            else if (controller == "Machinery" && (isBoss || isNonCompanyUser)) canAddToPage = true;
+            else if (controller == "Marketplace" && (isBoss || isNonCompanyUser)) canAddToPage = true;
         }
     }
 

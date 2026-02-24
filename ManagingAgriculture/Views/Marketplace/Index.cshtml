@@ -2,54 +2,64 @@
 @model IEnumerable<ManagingAgriculture.Models.MarketplaceListing>
 @{
     ViewData["Title"] = "Marketplace";
+    var approvedIds = ViewBag.ApprovedListingIds as HashSet<int> ?? new HashSet<int>();
+    var pendingIds  = ViewBag.PendingListingIds  as HashSet<int> ?? new HashSet<int>();
+    string currentUserId = ViewBag.CurrentUserId as string ?? "";
+    bool canTransact = ViewBag.CanTransact as bool? ?? false;
 }
 
 <div class="marketplace-container">
     <div class="page-header">
         <div>
-            <p class="subtitle">Buy, sell, or rent farm equipment</p>
+            <p class="subtitle">Buy and sell farm machinery</p>
         </div>
+        @if (canTransact)
+        {
+            <div class="d-flex gap-2">
+                <a href="@Url.Action("MyRequests", "Marketplace")" class="btn btn-outline-warning btn-sm">
+                    <i class="fas fa-bell me-1"></i> My Requests
+                </a>
+            </div>
+        }
     </div>
 
     <div class="marketplace-filters">
         <form onsubmit="return false;">
-            <input type="text" name="q" value="@(ViewBag.Query ?? "")" class="marketplace-search form-control" placeholder="Search equipment..." />
-            @{
-                var selectedCat = (ViewBag.SelectedCategory as string) ?? "All";
-            }
-            <div class="select-wrap">
-                <select name="category" class="marketplace-category form-select">
-                    @if (selectedCat == "All")
-                    {
-                        <option value="All" selected>All</option>
-                    }
-                    else
-                    {
-                        <option value="All">All</option>
-                    }
-
-                    @{
-                        var cats = (ViewBag.Categories as IEnumerable<string>) ?? Enumerable.Empty<string>();
-                        var extras = new[] { "Parts", "Tools" };
-                        foreach (var c in cats.Union(extras))
-                        {
-                            if (selectedCat == c)
-                            {
-                                <option value="@c" selected>@c</option>
-                            }
-                            else
-                            {
-                                <option value="@c">@c</option>
-                            }
-                        }
-                    }
-                </select>
-                <span class="select-indicator">▾</span>
-            </div>
+            <input type="text" name="q" value="@(ViewBag.Query ?? "")" class="marketplace-search form-control" placeholder="Search machinery..." id="mpSearchInput" />
         </form>
-    </div> 
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-3">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mt-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
     <div id="marketplace-grid">
         @await Html.PartialAsync("_Grid", (object)Model)
     </div>
 </div>
+
+@section Scripts {
+<script>
+    const searchInput = document.getElementById('mpSearchInput');
+    let debTimer;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(debTimer);
+        debTimer = setTimeout(() => {
+            fetch('/Marketplace/Filter?q=' + encodeURIComponent(this.value))
+                .then(r => r.text())
+                .then(html => { document.getElementById('marketplace-grid').innerHTML = html; });
+        }, 350);
+    });
+</script>
+}

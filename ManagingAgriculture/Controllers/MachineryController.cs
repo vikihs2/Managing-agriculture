@@ -66,10 +66,13 @@ namespace ManagingAgriculture.Controllers
         /// </summary>
         /// <returns>View with empty Machinery model</returns>
         [HttpGet]
-        public IActionResult Add()
+        public async Task<IActionResult> Add()
         {
-            // Only Boss can add machinery
-            if (!User.IsInRole("Boss"))
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            // Company users: only Boss can add machinery
+            if (user.CompanyId != null && !User.IsInRole("Boss"))
             {
                 TempData["Error"] = "Only the Boss can add machinery.";
                 return RedirectToAction(nameof(Index));
@@ -87,8 +90,11 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(Machinery machinery)
         {
-            // Only Boss can add machinery
-            if (!User.IsInRole("Boss"))
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            // Company users: only Boss can add machinery
+            if (user.CompanyId != null && !User.IsInRole("Boss"))
             {
                 TempData["Error"] = "Only the Boss can add machinery.";
                 return RedirectToAction(nameof(Index));
@@ -107,12 +113,9 @@ namespace ManagingAgriculture.Controllers
                 return View(machinery);
             }
 
-            var user = await _userManager.GetUserAsync(User);
-            if (user != null)
-            {
-                machinery.OwnerUserId = user.Id;
-                machinery.CompanyId = user.CompanyId;
-            }
+            // user already fetched above — set ownership
+            machinery.OwnerUserId = user.Id;
+            machinery.CompanyId = user.CompanyId;
 
             // Set timestamps for audit trail
             machinery.CreatedDate = DateTime.Now;
@@ -135,19 +138,22 @@ namespace ManagingAgriculture.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            // Only Boss can edit machinery
-            if (!User.IsInRole("Boss"))
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            // Company users: only Boss can edit
+            if (user.CompanyId != null && !User.IsInRole("Boss"))
             {
                 TempData["Error"] = "Only the Boss can edit machinery.";
                 return RedirectToAction(nameof(Index));
             }
             // Find machinery by ID
             var machinery = await _context.Machinery.FindAsync(id);
+            if (machinery == null) return NotFound();
 
-            if (machinery == null)
-            {
-                return NotFound();
-            }
+            // Non-company users can only edit their own machinery
+            if (user.CompanyId == null && machinery.OwnerUserId != user.Id)
+                return Forbid();
 
             return View(machinery);
         }
@@ -163,8 +169,11 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Machinery machinery)
         {
-            // Only Boss can edit machinery
-            if (!User.IsInRole("Boss"))
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            // Company users: only Boss can edit machinery
+            if (user.CompanyId != null && !User.IsInRole("Boss"))
             {
                 TempData["Error"] = "Only the Boss can edit machinery.";
                 return RedirectToAction(nameof(Index));
@@ -234,8 +243,11 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            // Only Boss can delete machinery
-            if (!User.IsInRole("Boss"))
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            // Company users: only Boss can delete machinery
+            if (user.CompanyId != null && !User.IsInRole("Boss"))
             {
                 TempData["Error"] = "Only the Boss can delete machinery.";
                 return RedirectToAction(nameof(Index));
@@ -246,6 +258,10 @@ namespace ManagingAgriculture.Controllers
 
             if (machinery != null)
             {
+                // Non-company users can only delete their own machinery
+                if (user.CompanyId == null && machinery.OwnerUserId != user.Id)
+                    return Forbid();
+
                 _context.Machinery.Remove(machinery);
                 await _context.SaveChangesAsync();
             }

@@ -4,8 +4,12 @@
     bool isBoss = User.IsInRole("Boss");
     bool isManager = User.IsInRole("Manager");
     bool isEmployee = User.IsInRole("Employee");
-    // Only Boss can edit/delete/add machinery
-    bool canManage = isBoss;
+    bool isAdmin = User.IsInRole("SystemAdmin");
+    bool isIT = User.IsInRole("ITSupport");
+    bool isCompanyUser = isBoss || isManager || isEmployee;
+    // Boss can manage company machinery; non-company users manage their own
+    bool canManageCo = isBoss;
+    bool isNonCompanyUser = !isCompanyUser;
 }
 
 <div class="machinery-container">
@@ -65,14 +69,19 @@
                         <span class="service-days">@serviceUrgency</span>
                     </div>
                 </div>
-                @* Only Boss can edit/delete machinery *@
-                @if (canManage)
+                @* Boss can edit/delete company machinery; non-company users can edit/delete their own *@
+                @{
+                    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    bool showActions = canManageCo || (isNonCompanyUser && machinery.OwnerUserId == currentUserId);
+                }
+                @if (showActions)
                 {
                     <div class="machinery-actions">
                         <a href="@Url.Action("Edit", "Machinery", new { id = machinery.Id })" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-edit"></i> Edit
                         </a>
                         <form method="post" action="@Url.Action("Delete", "Machinery")" style="display: inline-block;">
+                            @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@machinery.Id" />
                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
                                 <i class="fas fa-trash"></i> Delete

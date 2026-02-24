@@ -5,8 +5,13 @@
     bool isEmployee = User.IsInRole("Employee");
     bool isManager = User.IsInRole("Manager");
     bool isBoss = User.IsInRole("Boss");
-    // Only boss/manager can edit; employees can only adjust quantity
-    bool canEdit = !isEmployee;
+    bool isAdmin = User.IsInRole("SystemAdmin");
+    bool isIT = User.IsInRole("ITSupport");
+    bool isCompanyUser = isBoss || isManager || isEmployee;
+    // Boss+Manager (company) or any non-company user can edit
+    bool canEdit = isCompanyUser ? !isEmployee : true;
+    // Boss (company) or non-company users can delete
+    bool canDeleteResource = isCompanyUser ? isBoss : true;
 }
 
 <div class="resources-container">
@@ -98,16 +103,16 @@
                     </div>
                 }
                 <div class="mt-3 d-flex gap-2 action-row flex-wrap">
-                    @* Edit - Boss or Manager only *@
+                    @* Edit - Boss/Manager (company) or non-company user *@
                     @if (canEdit)
                     {
                         <a class="btn btn-sm btn-outline-primary action-btn" href="@Url.Action("Edit","Resources", new { id = resource.Id })"><i class="fas fa-edit"></i> Edit</a>
                     }
-                    @* +10/-10 buttons for all roles *@
+                    @* +10/-10 buttons — only ONE set, labelled *@
                     <button class="btn btn-sm btn-add action-btn adjust-ajax" data-id="@resource.Id" data-delta="10"><i class="fas fa-plus"></i> +Add 10</button>
                     <button class="btn btn-sm btn-danger action-btn adjust-ajax" data-id="@resource.Id" data-delta="-10"><i class="fas fa-minus"></i> -Use 10</button>
-                    @* Delete - Boss only *@
-                    @if (isBoss)
+                    @* Delete - Boss (company) or non-company user *@
+                    @if (canDeleteResource)
                     {
                         <form method="post" action="@Url.Action("Delete","Resources")" style="display:inline-block;">
                             @Html.AntiForgeryToken()

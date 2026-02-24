@@ -249,6 +249,20 @@
         var taskList = document.getElementById('taskList');
         taskList.innerHTML = '<li class="list-group-item text-center">Loading...</li>';
         
+        // Fetch available (non-busy) machinery
+        var machineSelect = document.getElementById('taskMachinerySelect');
+        machineSelect.innerHTML = '<option value="">-- No Machine Required --</option>';
+        fetch('/Boss/GetAvailableMachinery')
+            .then(res => res.json())
+            .then(machines => {
+                machines.forEach(m => {
+                    var opt = document.createElement('option');
+                    opt.value = m.id;
+                    opt.textContent = m.name + ' (' + m.type + ') - ' + m.status;
+                    machineSelect.appendChild(opt);
+                });
+            });
+        
         // Fetch tasks
         fetch('/Boss/GetEmployeeTasks?userId=' + userId)
             .then(res => res.json())

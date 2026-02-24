@@ -4,6 +4,11 @@
     bool isEmployee = User.IsInRole("Employee");
     bool isBoss = User.IsInRole("Boss");
     bool isManager = User.IsInRole("Manager");
+    bool isAdmin = User.IsInRole("SystemAdmin");
+    bool isIT = User.IsInRole("ITSupport");
+    bool isCompanyUser = isBoss || isManager || isEmployee;
+    // Non-company users (normal User, Admin, IT) can delete their own plants
+    bool canDelete = isBoss || (!isCompanyUser);
 }
 
 <div class="plants-container">
@@ -158,12 +163,48 @@
                                 </div>
                             }
                         </div>
+                        @{
+                            // Watering Frequency Suggestion
+                            var cropType = plant.PlantType ?? "";
+                            int suggestedWatering = cropType switch {
+                                "Wheat" or "Rye" or "Barley" or "Oats" => 7,
+                                "Corn (Maize)" or "Sorghum" or "Millet" => 5,
+                                "Rice" => 1,
+                                "Potato" or "Sweet Potato" or "Cassava" => 4,
+                                "Carrot" or "Beetroot" or "Turnip" or "Radish" => 3,
+                                "Tomato" or "Cucumber" or "Bell Pepper" or "Chili Pepper" or "Eggplant" => 2,
+                                "Onion" or "Garlic" or "Cabbage" or "Broccoli" or "Cauliflower" => 4,
+                                "Lettuce" or "Spinach" or "Zucchini" => 2,
+                                "Beans (Green Beans)" or "Peas" or "Lentils" or "Chickpeas" or "Soybean" => 4,
+                                "Strawberry" or "Watermelon" or "Melon" or "Pumpkin" or "Squash" => 3,
+                                "Sunflower" or "Rapeseed (Canola)" or "Cotton" or "Sugar Beet" or "Sugarcane" => 5,
+                                "Basil" or "Parsley" or "Dill" or "Mint" or "Oregano" or "Thyme" => 2,
+                                "Alfalfa" or "Clover" or "Tobacco" => 6,
+                                _ => 4
+                            };
+                            bool wateringOk = plant.WateringFrequencyDays.HasValue && plant.WateringFrequencyDays.Value <= suggestedWatering;
+                        }
+                        <div class="mt-2 p-2 rounded" style="background: @(wateringOk ? "#d4edda" : "#fff3cd"); border: 1px solid @(wateringOk ? "#c3e6cb" : "#ffc107"); font-size:0.82rem;">
+                            <i class="fas fa-tint me-1" style="color: @(wateringOk ? "#28a745" : "#e67e22");"></i>
+                            <strong>Watering Suggestion:</strong> For <em>@cropType</em>, water every <strong>@suggestedWatering day(s)</strong> for best health.
+                            @if (plant.WateringFrequencyDays.HasValue)
+                            {
+                                @if (wateringOk)
+                                {
+                                    <span class="text-success ms-1">✅ Your schedule looks good!</span>
+                                }
+                                else
+                                {
+                                    <span class="text-warning ms-1">⚠️ Consider watering more frequently.</span>
+                                }
+                            }
+                        </div>
                     </div>
                 }
 
                 <!-- ACTION BUTTONS -->
                 <div class="mt-3 d-flex gap-2 action-row flex-wrap">
-                    @* Edit - Boss or Manager only *@
+                    @* Edit - Boss, Manager, Admin, IT, or non-company user (not Employee) *@
                     @if (!isEmployee)
                     {
                         <a class="btn btn-sm btn-outline-primary action-btn" href="@Url.Action("Edit", "Plants", new { id = plant.Id })">
@@ -171,7 +212,7 @@
                         </a>
                     }
 
-                    @* Harvest - available to ALL if 100% grown *@
+                    @* Harvest - available to ALL if 100% grown. Hide disabled button for Manager/Admin/IT *@
                     @if (canHarvest)
                     {
                         <form asp-action="Harvest" method="post" style="display:inline-block;">
@@ -183,16 +224,17 @@
                             </button>
                         </form>
                     }
-                    else
+                    else if (!isManager && !isAdmin && !isIT)
                     {
+                        @* Show disabled harvest only for Boss, Employee, and non-company users *@
                         <button class="btn btn-sm btn-outline-secondary action-btn" disabled
                                 title="Can only harvest at 100% growth. Currently @plant.GrowthStagePercent%.">
                             <i class="fas fa-lock"></i> Harvest (@plant.GrowthStagePercent%)
                         </button>
                     }
 
-                    @* Delete - Boss only *@
-                    @if (isBoss)
+                    @* Delete - Boss (company) OR non-company users (User/Admin/IT) *@
+                    @if (canDelete)
                     {
                         <form asp-action="Delete" method="post" style="display:inline-block;">
                             @Html.AntiForgeryToken()

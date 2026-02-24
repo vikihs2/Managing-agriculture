@@ -246,6 +246,30 @@ namespace ManagingAgriculture.Controllers
             return Json(tasks);
         }
 
+        /// <summary>Returns machinery that is NOT currently assigned to an active (non-approved) task.</summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAvailableMachinery()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null || currentUser.CompanyId == null) return Json(new object[0]);
+
+            // IDs that are currently locked by an active task (not yet approved = not done)
+            var busyMachineryIds = await _context.TaskAssignments
+                .Where(t => t.CompanyId == currentUser.CompanyId
+                         && t.AssignedMachineryId.HasValue
+                         && !t.IsApprovedByBoss)
+                .Select(t => t.AssignedMachineryId!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            var available = await _context.Machinery
+                .Where(m => m.CompanyId == currentUser.CompanyId && !busyMachineryIds.Contains(m.Id))
+                .Select(m => new { m.Id, m.Name, m.Type, m.Status })
+                .ToListAsync();
+
+            return Json(available);
+        }
+
         [HttpPost]
         public async Task<IActionResult> ApproveTask(int taskId)
         {

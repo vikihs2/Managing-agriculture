@@ -7,7 +7,7 @@
 <div class="container mt-4">
     <div class="card mx-auto" style="max-width:720px;">
         <div class="card-body">
-            <h3 class="card-title mb-3">Post New Marketplace Listing</h3>
+            <h3 class="card-title mb-3"><i class="fas fa-plus-circle me-2"></i>Post New Marketplace Listing</h3>
             <form asp-action="Add" method="post">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -15,9 +15,9 @@
                 @if (ViewBag.UserMachinery != null && ((List<ManagingAgriculture.Models.Machinery>)ViewBag.UserMachinery).Any())
                 {
                     <div class="mb-3">
-                        <label class="form-label">Or choose from your existing machinery</label>
+                        <label class="form-label fw-bold">Choose from your existing machinery</label>
                         <select name="selectedMachineryId" id="selectedMachineryId" class="form-select">
-                            <option value="">-- Use existing machinery (optional) --</option>
+                            <option value="">-- Select machinery to auto-fill (optional) --</option>
                             @foreach (var m in (List<ManagingAgriculture.Models.Machinery>)ViewBag.UserMachinery)
                             {
                                 <option value="@m.Id">@m.Name (@m.Type) - @m.Status</option>
@@ -28,28 +28,14 @@
 
                 <!-- Item Name -->
                 <div class="mb-3">
-                    <label asp-for="ItemName" class="form-label">Item Name</label>
+                    <label asp-for="ItemName" class="form-label fw-bold">Item Name *</label>
                     <input asp-for="ItemName" class="form-control" placeholder="e.g., John Deere Tractor" />
                     <span asp-validation-for="ItemName" class="text-danger"></span>
                 </div>
 
-                <!-- Category -->
-                <div class="mb-3">
-                    <label asp-for="Category" class="form-label">Category</label>
-                    <select asp-for="Category" class="form-control">
-                        <option value="">-- Select Category --</option>
-                        <option value="Equipment">Equipment</option>
-                        <option value="Seeds">Seeds</option>
-                        <option value="Supplies">Supplies</option>
-                        <option value="Tools">Tools</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <span asp-validation-for="Category" class="text-danger"></span>
-                </div>
-
                 <!-- Condition Status -->
                 <div class="mb-3">
-                    <label asp-for="ConditionStatus" class="form-label">Condition</label>
+                    <label asp-for="ConditionStatus" class="form-label fw-bold">Condition *</label>
                     <select asp-for="ConditionStatus" class="form-control">
                         <option value="">-- Select Condition --</option>
                         <option value="New">New</option>
@@ -63,24 +49,24 @@
 
                 <!-- Description -->
                 <div class="mb-3">
-                    <label asp-for="Description" class="form-label">Description</label>
-                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Describe your item..."></textarea>
+                    <label asp-for="Description" class="form-label fw-bold">Description</label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Describe the machinery..."></textarea>
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
 
-                <!-- Engine Hours (optional for machinery listings) -->
+                <!-- Engine Hours -->
                 <div class="mb-3">
-                    <label asp-for="EngineHours" class="form-label">Engine Hours (h) <small class="text-muted">(optional)</small></label>
-                    <input asp-for="EngineHours" class="form-control non-negative" type="number" step="0.1" min="0" placeholder="e.g., 123.4" value='@(Model?.EngineHours?.ToString("N1") ?? "0.0")' />
+                    <label asp-for="EngineHours" class="form-label fw-bold">Engine Hours (h) <small class="text-muted fw-normal">(optional)</small></label>
+                    <input asp-for="EngineHours" class="form-control" type="number" step="0.1" min="0" placeholder="e.g., 123.4" />
                     <span asp-validation-for="EngineHours" class="text-danger"></span>
                 </div>
 
                 <!-- Listing Type and Pricing -->
                 <hr class="my-4" />
-                <h5 class="mb-3">Listing Type & Pricing</h5>
+                <h5 class="mb-3">Listing Type &amp; Pricing</h5>
 
                 <div class="mb-3">
-                    <label asp-for="ListingType" class="form-label">I want to:</label>
+                    <label asp-for="ListingType" class="form-label fw-bold">I want to:</label>
                     <select asp-for="ListingType" class="form-control" id="listingType">
                         <option value="">-- Select Option --</option>
                         <option value="Sale">Sell only</option>
@@ -92,39 +78,39 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="SalePrice" class="form-label">Sale Price ($)</label>
-                        <input asp-for="SalePrice" class="form-control" type="number" step="0.01" placeholder="0.00" />
+                        <label asp-for="SalePrice" class="form-label fw-bold">Sale Price ($)</label>
+                        <input asp-for="SalePrice" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" />
                         <span asp-validation-for="SalePrice" class="text-danger"></span>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label asp-for="RentalPricePerDay" class="form-label">Daily Rental Price ($)</label>
-                        <input asp-for="RentalPricePerDay" class="form-control" type="number" step="0.01" placeholder="0.00" />
+                        <label asp-for="RentalPricePerDay" class="form-label fw-bold">Daily Rental Price ($)</label>
+                        <input asp-for="RentalPricePerDay" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" />
                         <span asp-validation-for="RentalPricePerDay" class="text-danger"></span>
                     </div>
                 </div>
 
-                <!-- Seller Information -->
+                <!-- Seller Info (auto-filled, contact phone editable) -->
                 <hr class="my-4" />
                 <h5 class="mb-3">Your Contact Information</h5>
 
                 <div class="mb-3">
-                    <label asp-for="SellerName" class="form-label">Your Name / Business</label>
-                    <input asp-for="SellerName" class="form-control" placeholder="Your name or business name" />
-                    <span asp-validation-for="SellerName" class="text-danger"></span>
+                    <label class="form-label fw-bold">Seller Name</label>
+                    <input asp-for="SellerName" class="form-control" readonly style="background:#f8f9fa;" />
+                    <small class="text-muted">Auto-filled from your account name</small>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="SellerPhone" class="form-label">Contact Phone</label>
+                    <label asp-for="SellerPhone" class="form-label fw-bold">Contact Phone</label>
                     <input asp-for="SellerPhone" class="form-control" type="tel" placeholder="555-1234" />
                     <span asp-validation-for="SellerPhone" class="text-danger"></span>
                 </div>
 
                 <!-- Image URL (Optional) -->
                 <div class="mb-3">
-                    <label asp-for="ImageUrl" class="form-label">Image URL (Optional)</label>
+                    <label asp-for="ImageUrl" class="form-label fw-bold">Image URL <small class="text-muted fw-normal">(Optional)</small></label>
                     <input asp-for="ImageUrl" class="form-control" type="url" placeholder="https://example.com/image.jpg" />
                     <span asp-validation-for="ImageUrl" class="text-danger"></span>
-                    <small class="text-muted">Provide a full URL to an image hosted online (e.g., https://...)</small>
+                    <small class="text-muted">Provide a full URL to an image hosted online</small>
                 </div>
 
                 <!-- Form Actions -->
@@ -148,14 +134,14 @@
         select.addEventListener('change', function(){
             var id = this.value;
             if (!id) return;
-            // Simple fill: send a small fetch to a new endpoint to get machinery details
             fetch('/Machinery/DetailsApi/' + id)
                 .then(r => r.json())
                 .then(data => {
                     if (data) {
-                        document.querySelector('[name="ItemName"]').value = data.name;
-                        document.querySelector('[name="Description"]').value = data.type + ' - ' + data.name;
-                        document.querySelector('[name="Category"]').value = 'Equipment';
+                        var nameEl = document.querySelector('[name="ItemName"]');
+                        var descEl = document.querySelector('[name="Description"]');
+                        if (nameEl && !nameEl.value) nameEl.value = data.name;
+                        if (descEl && !descEl.value) descEl.value = data.type + ' - ' + data.name;
                     }
                 })
                 .catch(()=>{});

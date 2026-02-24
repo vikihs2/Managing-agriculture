@@ -61,10 +61,12 @@ namespace ManagingAgriculture.Controllers
         }
 
         [HttpGet]
-        public IActionResult Add()
+        public async Task<IActionResult> Add()
         {
-            // Only Boss and Manager can add resources
-            if (User.IsInRole("Employee"))
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+            // Company Employees cannot add resources
+            if (user.CompanyId != null && User.IsInRole("Employee"))
             {
                 TempData["Error"] = "Employees cannot add resources.";
                 return RedirectToAction("Index");
@@ -77,8 +79,10 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(Resource model)
         {
-            // Only Boss and Manager can add resources
-            if (User.IsInRole("Employee"))
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+            // Company Employees cannot add resources
+            if (user.CompanyId != null && User.IsInRole("Employee"))
             {
                 TempData["Error"] = "Employees cannot add resources.";
                 return RedirectToAction("Index");
@@ -87,7 +91,7 @@ namespace ManagingAgriculture.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var user = await _userManager.GetUserAsync(User);
+            // user already fetched above
             if (user != null)
             {
                 model.OwnerUserId = user.Id;
@@ -106,14 +110,18 @@ namespace ManagingAgriculture.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            // Only Boss and Manager can edit resources
-            if (User.IsInRole("Employee"))
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+            // Company Employees cannot edit resources
+            if (user.CompanyId != null && User.IsInRole("Employee"))
             {
                 TempData["Error"] = "Employees cannot edit resources.";
                 return RedirectToAction("Index");
             }
             var item = await _context.Resources.FindAsync(id);
             if (item == null) return NotFound();
+            // Non-company users can only edit their own resources
+            if (user.CompanyId == null && item.OwnerUserId != user.Id) return Forbid();
             return View(item);
         }
 
@@ -121,8 +129,10 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Resource model)
         {
-            // Only Boss and Manager can edit
-            if (User.IsInRole("Employee"))
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+            // Company Employees cannot edit
+            if (user.CompanyId != null && User.IsInRole("Employee"))
             {
                 TempData["Error"] = "Employees cannot edit resources.";
                 return RedirectToAction("Index");
@@ -161,8 +171,11 @@ namespace ManagingAgriculture.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            // Only Boss can delete resources
-            if (!User.IsInRole("Boss"))
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            // Company: only Boss can delete resources
+            if (user.CompanyId != null && !User.IsInRole("Boss"))
             {
                 TempData["Error"] = "Only the Boss can delete resources.";
                 return RedirectToAction("Index");
@@ -171,6 +184,9 @@ namespace ManagingAgriculture.Controllers
             var item = await _context.Resources.FindAsync(id);
             if (item != null)
             {
+                // Non-company users can only delete their own resources
+                if (user.CompanyId == null && item.OwnerUserId != user.Id)
+                    return Forbid();
                 _context.Resources.Remove(item);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Resource deleted successfully.";

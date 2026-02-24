@@ -53,9 +53,17 @@ namespace ManagingAgriculture.Controllers
             var employees = await _userManager.GetUsersInRoleAsync("Employee");
             ViewBag.Employees = employees.Where(e => e.CompanyId == user.CompanyId).ToList();
 
-            // Get available machinery
+            // Get available machinery (not currently assigned to an active task)
+            var busyMachineryIds = await _context.TaskAssignments
+                .Where(t => t.CompanyId == user.CompanyId
+                         && t.AssignedMachineryId.HasValue
+                         && !t.IsApprovedByBoss)
+                .Select(t => t.AssignedMachineryId!.Value)
+                .Distinct()
+                .ToListAsync();
+
             ViewBag.Machinery = await _context.Machinery
-                .Where(m => m.CompanyId == user.CompanyId)
+                .Where(m => m.CompanyId == user.CompanyId && !busyMachineryIds.Contains(m.Id))
                 .ToListAsync();
 
             return View(myTasks);

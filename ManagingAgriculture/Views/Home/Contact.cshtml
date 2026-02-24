@@ -89,11 +89,12 @@
                                 <input asp-for="FullName" class="form-control" placeholder="Your name" />
                                 <span asp-validation-for="FullName" class="text-danger"></span>
                             </div>
-                            <div class="mb-3">
-                                <label asp-for="Email" class="form-label">Email Address</label>
-                                <input asp-for="Email" class="form-control" placeholder="your@email.com" />
-                                <span asp-validation-for="Email" class="text-danger"></span>
-                            </div>
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">Email Address</label>
+                            <input asp-for="Email" class="form-control" readonly style="background:#f8f9fa;"
+                                   value="@(ViewBag.UserEmail ?? Model?.Email)" />
+                            <small class="text-muted">Auto-filled from your account</small>
+                        </div>
                             <div class="mb-3">
                                 <label asp-for="Message" class="form-label">Message</label>
                                 <textarea asp-for="Message" class="form-control" rows="4" placeholder="How can we help you?"></textarea>

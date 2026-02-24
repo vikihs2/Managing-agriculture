@@ -11,10 +11,6 @@ using Microsoft.AspNetCore.Identity;
 
 namespace ManagingAgriculture.Controllers
 {
-    /// <summary>
-    /// MarketplaceController manages marketplace listings for buying, selling, and renting equipment/products.
-    /// Users can browse available listings and post their own items for sale or rent.
-    /// </summary>
     [Authorize]
     public class MarketplaceController : Controller
     {
@@ -27,125 +23,182 @@ namespace ManagingAgriculture.Controllers
             _userManager = userManager;
         }
 
-        /// <summary>
-        /// Displays list of all marketplace listings.
-        /// Returns listings filtered by active status, sorted by newest first.
-        /// </summary>
-        /// <returns>View with IEnumerable of MarketplaceListing</returns>
-        public async Task<IActionResult> Index(string? category = null, string? q = null)
+        /// <summary>Returns true if the user is allowed to transact in the marketplace (buy/sell).</summary>
+        private bool CanTransact(ApplicationUser user)
+        {
+            // Company users: only Boss can transact; Manager and Employee are view-only
+            if (user.CompanyId != null)
+                return User.IsInRole("Boss");
+            // Non-company users (User, SystemAdmin, ITSupport) can always transact
+            return true;
+        }
+
+        // Helper: get friendly display name (same logic as _Layout)
+        private string GetDisplayName(ApplicationUser user)
+        {
+            var email = user.Email ?? "";
+            if (email.Contains("@"))
+            {
+                var raw = email.Split('@')[0];
+                return raw.Length > 0 ? char.ToUpper(raw[0]) + raw.Substring(1) : raw;
+            }
+            return email;
+        }
+
+        public async Task<IActionResult> Index(string? q = null)
         {
             ViewData["Title"] = "Marketplace";
 
-            // Filter active listings and sort by creation date (newest first)
             var query = _context.MarketplaceListings.AsQueryable()
                 .Where(l => l.ListingStatus == "Active");
-
-            if (!string.IsNullOrWhiteSpace(category) && category != "All")
-            {
-                query = query.Where(l => l.Category == category);
-            }
 
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var qLower = q.ToLower();
-                query = query.Where(l => l.ItemName.ToLower().Contains(qLower) || (l.Description != null && l.Description.ToLower().Contains(qLower)));
+                query = query.Where(l => l.ItemName.ToLower().Contains(qLower) ||
+                    (l.Description != null && l.Description.ToLower().Contains(qLower)));
             }
 
             var results = await query.OrderByDescending(l => l.CreatedDate).ToListAsync();
 
-            // Get distinct categories for filter
-            ViewBag.Categories = await _context.MarketplaceListings.Select(l => l.Category).Distinct().ToListAsync();
-            ViewBag.SelectedCategory = category ?? "All";
             ViewBag.Query = q ?? string.Empty;
 
-            // Get purchased listing IDs for the current user
             var user = await _userManager.GetUserAsync(User);
             if (user != null)
             {
-                var purchased = await _context.MarketplacePurchaseRequests
-                    .Where(r => r.BuyerUserId == user.Id && r.Status == "Purchased")
+                // IDs where user's request is approved (bought)
+                var approvedIds = await _context.MarketplacePurchaseRequests
+                    .Where(r => r.BuyerUserId == user.Id && r.Status == "Approved")
                     .Select(r => r.ListingId)
                     .ToListAsync();
-                ViewBag.PurchasedListingIds = new HashSet<int>(purchased);
+                ViewBag.ApprovedListingIds = new HashSet<int>(approvedIds);
+
+                // IDs where user sent a pending request
+                var pendingIds = await _context.MarketplacePurchaseRequests
+                    .Where(r => r.BuyerUserId == user.Id && r.Status == "Pending")
+                    .Select(r => r.ListingId)
+                    .ToListAsync();
+                ViewBag.PendingListingIds = new HashSet<int>(pendingIds);
+
+                ViewBag.CurrentUserId = user.Id;
+                ViewBag.CanTransact = CanTransact(user);
             }
             else
             {
-                ViewBag.PurchasedListingIds = new HashSet<int>();
+                ViewBag.ApprovedListingIds = new HashSet<int>();
+                ViewBag.PendingListingIds = new HashSet<int>();
+                ViewBag.CurrentUserId = "";
+                ViewBag.CanTransact = false;
             }
 
             return View(results);
         }
 
-        /// <summary>
-        /// Returns filtered listings as a partial view for AJAX updates
-        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Filter(string? category = null, string? q = null)
+        public async Task<IActionResult> Filter(string? q = null)
         {
             var query = _context.MarketplaceListings.AsQueryable()
                 .Where(l => l.ListingStatus == "Active");
 
-            if (!string.IsNullOrWhiteSpace(category) && category != "All")
-            {
-                query = query.Where(l => l.Category == category);
-            }
-
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var qLower = q.ToLower();
-                query = query.Where(l => l.ItemName.ToLower().Contains(qLower) || (l.Description != null && l.Description.ToLower().Contains(qLower)));
+                query = query.Where(l => l.ItemName.ToLower().Contains(qLower) ||
+                    (l.Description != null && l.Description.ToLower().Contains(qLower)));
             }
 
             var results = await query.OrderByDescending(l => l.CreatedDate).ToListAsync();
 
-            // Pass purchased IDs
             var user = await _userManager.GetUserAsync(User);
             if (user != null)
             {
-                var purchased = await _context.MarketplacePurchaseRequests
-                    .Where(r => r.BuyerUserId == user.Id && r.Status == "Purchased")
-                    .Select(r => r.ListingId)
-                    .ToListAsync();
-                ViewBag.PurchasedListingIds = new HashSet<int>(purchased);
+                var approvedIds = await _context.MarketplacePurchaseRequests
+                    .Where(r => r.BuyerUserId == user.Id && r.Status == "Approved")
+                    .Select(r => r.ListingId).ToListAsync();
+                ViewBag.ApprovedListingIds = new HashSet<int>(approvedIds);
+
+                var pendingIds = await _context.MarketplacePurchaseRequests
+                    .Where(r => r.BuyerUserId == user.Id && r.Status == "Pending")
+                    .Select(r => r.ListingId).ToListAsync();
+                ViewBag.PendingListingIds = new HashSet<int>(pendingIds);
+
+                ViewBag.CurrentUserId = user.Id;
+                ViewBag.CanTransact = CanTransact(user);
             }
             else
             {
-                ViewBag.PurchasedListingIds = new HashSet<int>();
+                ViewBag.ApprovedListingIds = new HashSet<int>();
+                ViewBag.PendingListingIds = new HashSet<int>();
+                ViewBag.CurrentUserId = "";
+                ViewBag.CanTransact = false;
             }
 
             return PartialView("_Grid", results);
         }
 
-        /// <summary>
-        /// Displays form to post new marketplace listing.
-        /// HTTP GET method for displaying empty form.
-        /// </summary>
-        /// <returns>View with empty MarketplaceListing model</returns>
         [HttpGet]
         public async Task<IActionResult> Add()
         {
-            ViewBag.UserMachinery = await _context.Machinery.ToListAsync();
-            return View(new MarketplaceListing());
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            if (!CanTransact(user))
+            {
+                TempData["Error"] = "Only the Boss can post listings in the marketplace.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Load machinery owned by this user (or company)
+            List<Machinery> machinery;
+            if (user.CompanyId != null)
+                machinery = await _context.Machinery.Where(m => m.CompanyId == user.CompanyId).ToListAsync();
+            else
+                machinery = await _context.Machinery.Where(m => m.OwnerUserId == user.Id).ToListAsync();
+
+            ViewBag.UserMachinery = machinery;
+
+            // Pre-fill seller name from welcome name
+            var newListing = new MarketplaceListing
+            {
+                SellerName = GetDisplayName(user),
+                SellerUserId = user.Id,
+                Category = "Equipment"
+            };
+            return View(newListing);
         }
 
-        /// <summary>
-        /// Processes form submission to create new marketplace listing.
-        /// HTTP POST method that validates input and adds listing to collection.
-        /// </summary>
-        /// <param name="listing">MarketplaceListing object populated from form submission</param>
-        /// <returns>Redirects to Index on success, returns view with model on validation failure</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(MarketplaceListing listing, int? selectedMachineryId)
         {
-            // Validate model state
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            if (!CanTransact(user))
+            {
+                TempData["Error"] = "Only the Boss can post listings in the marketplace.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Force seller identity — always use the logged-in user's display name and ID
+            listing.SellerUserId = user.Id;
+            listing.SellerName = GetDisplayName(user);
+            listing.Category = "Equipment"; // Only machinery sold here
+
+            // Remove SellerName from ModelState since we override it
+            ModelState.Remove("SellerName");
+
             if (!ModelState.IsValid)
             {
-                ViewBag.UserMachinery = await _context.Machinery.ToListAsync();
+                List<Machinery> mach;
+                if (user.CompanyId != null)
+                    mach = await _context.Machinery.Where(m => m.CompanyId == user.CompanyId).ToListAsync();
+                else
+                    mach = await _context.Machinery.Where(m => m.OwnerUserId == user.Id).ToListAsync();
+                ViewBag.UserMachinery = mach;
                 return View(listing);
             }
 
-            // If user chose existing machinery, prefill some listing fields and link it
             if (selectedMachineryId.HasValue)
             {
                 var mach = await _context.Machinery.FindAsync(selectedMachineryId.Value);
@@ -153,191 +206,274 @@ namespace ManagingAgriculture.Controllers
                 {
                     listing.ItemName = string.IsNullOrWhiteSpace(listing.ItemName) ? mach.Name : listing.ItemName;
                     listing.Description = string.IsNullOrWhiteSpace(listing.Description) ? $"{mach.Type} - {mach.Name}" : listing.Description;
-                    listing.Category = string.IsNullOrWhiteSpace(listing.Category) ? "Equipment" : listing.Category;
-                    listing.MachineryId = mach.Id; // Link to machinery
+                    listing.MachineryId = mach.Id;
                 }
             }
 
-            // Set timestamps for audit trail
             listing.CreatedDate = DateTime.Now;
             listing.UpdatedDate = DateTime.Now;
-
-            // Default listing to active status
             listing.ListingStatus = "Active";
 
-            // Add to database
             _context.MarketplaceListings.Add(listing);
             await _context.SaveChangesAsync();
 
-            // Redirect to marketplace list view
+            TempData["Success"] = "Listing posted successfully!";
             return RedirectToAction(nameof(Index));
         }
 
-        /// <summary>
-        /// Displays listing details and edit form.
-        /// HTTP GET method for displaying marketplace listing information by ID.
-        /// </summary>
-        /// <param name="id">ID of listing to display</param>
-        /// <returns>View with MarketplaceListing model if found, or NotFound if listing doesn't exist</returns>
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
-        {
-            // Find listing by ID
-            var listing = await _context.MarketplaceListings.FindAsync(id);
-
-            if (listing == null)
-            {
-                return NotFound();
-            }
-
-            return View(listing);
-        }
-
-        /// <summary>
-        /// Processes form submission to update existing marketplace listing.
-        /// HTTP POST method that validates input and updates listing in collection.
-        /// </summary>
-        /// <param name="id">ID of listing to update</param>
-        /// <param name="listing">Updated MarketplaceListing object from form submission</param>
-        /// <returns>Redirects to Index on success, returns view with model on validation failure</returns>
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, MarketplaceListing listing)
-        {
-            if (id != listing.Id)
-            {
-                return NotFound();
-            }
-
-            // Validate model state
-            if (!ModelState.IsValid)
-            {
-                return View(listing);
-            }
-
-            try
-            {
-                var existingListing = await _context.MarketplaceListings.AsNoTracking().FirstOrDefaultAsync(l => l.Id == id);
-                if (existingListing == null)
-                {
-                    return NotFound();
-                }
-
-                // Preserve creation date
-                listing.CreatedDate = existingListing.CreatedDate;
-                listing.UpdatedDate = DateTime.Now;
-                listing.ListingStatus = existingListing.ListingStatus; // Preserve status unless explicitly changed (could add status dropdown to edit form)
-
-                _context.Update(listing);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ListingExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            // Redirect to marketplace list view
-            return RedirectToAction(nameof(Index));
-        }
-
-        /// <summary>
-        /// Buy a marketplace listing - adds it to the buyer's machinery
-        /// </summary>
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Buy(int id)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
             var listing = await _context.MarketplaceListings.FindAsync(id);
-            if (listing == null)
+            if (listing == null) return NotFound();
+
+            // Only the seller can edit
+            if (listing.SellerUserId != user.Id)
             {
-                TempData["Error"] = "Listing not found.";
+                TempData["Error"] = "You can only edit your own listings.";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Check not already purchased by this user
-            var alreadyBought = await _context.MarketplacePurchaseRequests
-                .AnyAsync(r => r.BuyerUserId == user.Id && r.ListingId == id && r.Status == "Purchased");
-            if (alreadyBought)
+            return View(listing);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, MarketplaceListing listing)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            if (id != listing.Id) return NotFound();
+
+            var existing = await _context.MarketplaceListings.AsNoTracking().FirstOrDefaultAsync(l => l.Id == id);
+            if (existing == null) return NotFound();
+
+            // Only the seller can edit
+            if (existing.SellerUserId != user.Id)
             {
-                TempData["Error"] = "You have already purchased this item.";
+                TempData["Error"] = "You can only edit your own listings.";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Create a machinery record for the buyer
+            // Force seller identity
+            listing.SellerUserId = existing.SellerUserId;
+            listing.SellerName = existing.SellerName;
+            listing.Category = "Equipment";
+            ModelState.Remove("SellerName");
+
+            if (!ModelState.IsValid) return View(listing);
+
+            try
+            {
+                listing.CreatedDate = existing.CreatedDate;
+                listing.UpdatedDate = DateTime.Now;
+                listing.ListingStatus = existing.ListingStatus;
+                _context.Update(listing);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.MarketplaceListings.Any(e => e.Id == id)) return NotFound();
+                throw;
+            }
+
+            TempData["Success"] = "Listing updated successfully!";
+            return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>Send a purchase request to the seller.</summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RequestToBuy(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            if (!CanTransact(user))
+            {
+                TempData["Error"] = "Only the Boss can buy from the marketplace.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var listing = await _context.MarketplaceListings.FindAsync(id);
+            if (listing == null || listing.ListingStatus != "Active")
+            {
+                TempData["Error"] = "Listing not found or no longer available.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Can't buy your own listing
+            if (listing.SellerUserId == user.Id)
+            {
+                TempData["Error"] = "You cannot buy your own listing.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Check for existing pending/approved request from this user
+            var existingRequest = await _context.MarketplacePurchaseRequests
+                .AnyAsync(r => r.ListingId == id && r.BuyerUserId == user.Id && (r.Status == "Pending" || r.Status == "Approved"));
+            if (existingRequest)
+            {
+                TempData["Error"] = "You have already sent a request for this listing.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var request = new MarketplacePurchaseRequest
+            {
+                ListingId = id,
+                BuyerUserId = user.Id,
+                BuyerCompanyId = user.CompanyId,
+                BuyerName = GetDisplayName(user),
+                RequestedDate = DateTime.UtcNow,
+                Status = "Pending"
+            };
+            _context.MarketplacePurchaseRequests.Add(request);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Purchase request sent to the seller!";
+            return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>Seller views all pending requests for their listings.</summary>
+        [HttpGet]
+        public async Task<IActionResult> MyRequests()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            if (!CanTransact(user))
+            {
+                TempData["Error"] = "Only the Boss can manage marketplace requests.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var requests = await _context.MarketplacePurchaseRequests
+                .Include(r => r.Listing)
+                .Include(r => r.BuyerUser)
+                .Where(r => r.Listing!.SellerUserId == user.Id && r.Status == "Pending")
+                .OrderByDescending(r => r.RequestedDate)
+                .ToListAsync();
+
+            return View(requests);
+        }
+
+        /// <summary>Seller approves a purchase request — transfers machinery to buyer, marks listing as Sold.</summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveRequest(int requestId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var request = await _context.MarketplacePurchaseRequests
+                .Include(r => r.Listing)
+                .Include(r => r.BuyerUser)
+                .FirstOrDefaultAsync(r => r.Id == requestId);
+
+            if (request == null || request.Listing == null)
+            {
+                TempData["Error"] = "Request not found.";
+                return RedirectToAction(nameof(MyRequests));
+            }
+
+            // Only the seller can approve
+            if (request.Listing.SellerUserId != user.Id)
+            {
+                TempData["Error"] = "You can only approve requests for your own listings.";
+                return RedirectToAction(nameof(MyRequests));
+            }
+
+            var buyer = request.BuyerUser;
+            if (buyer == null) buyer = await _userManager.FindByIdAsync(request.BuyerUserId);
+
+            // Create machinery record for the buyer
             var machine = new Machinery
             {
-                Name = listing.ItemName,
-                Type = listing.Category,
-                Status = listing.ConditionStatus,
-                EngineHours = listing.EngineHours,
-                PurchasePrice = listing.SalePrice,
+                Name = request.Listing.ItemName,
+                Type = request.Listing.Category,
+                Status = request.Listing.ConditionStatus,
+                EngineHours = request.Listing.EngineHours,
+                PurchasePrice = request.Listing.SalePrice,
                 PurchaseDate = DateTime.UtcNow,
-                CompanyId = user.CompanyId.HasValue ? user.CompanyId : null,
-                OwnerUserId = user.CompanyId == null ? user.Id : null,
+                CompanyId = buyer?.CompanyId,
+                OwnerUserId = buyer?.CompanyId == null ? request.BuyerUserId : null,
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
             };
             _context.Machinery.Add(machine);
 
-            // Record the purchase
-            var purchase = new MarketplacePurchaseRequest
-            {
-                ListingId = id,
-                BuyerUserId = user.Id,
-                BuyerCompanyId = user.CompanyId,
-                BuyerName = user.Email ?? "",
-                RequestedDate = DateTime.UtcNow,
-                Status = "Purchased"
-            };
-            _context.MarketplacePurchaseRequests.Add(purchase);
+            // Approve this request
+            request.Status = "Approved";
+
+            // Reject all other pending requests for the same listing
+            var otherRequests = await _context.MarketplacePurchaseRequests
+                .Where(r => r.ListingId == request.ListingId && r.Id != requestId && r.Status == "Pending")
+                .ToListAsync();
+            foreach (var r in otherRequests)
+                r.Status = "Rejected";
+
+            // Remove listing from marketplace (mark as Sold)
+            request.Listing.ListingStatus = "Sold";
+            request.Listing.UpdatedDate = DateTime.Now;
+            _context.Update(request.Listing);
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"🛒 '{listing.ItemName}' has been purchased and added to your machinery!";
-            return RedirectToAction(nameof(Index));
-
+            TempData["Success"] = $"Purchase approved! The machinery has been transferred to {buyer?.Email ?? "buyer"}.";
+            return RedirectToAction(nameof(MyRequests));
         }
 
-        /// <summary>
-        /// Deletes marketplace listing.
-        /// Marks the listing as sold/expired rather than permanently removing it.
-        /// </summary>
-        /// <param name="id">ID of listing to delete</param>
-        /// <returns>Redirects to Index after deletion</returns>
+        /// <summary>Seller rejects a purchase request.</summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectRequest(int requestId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var request = await _context.MarketplacePurchaseRequests
+                .Include(r => r.Listing)
+                .FirstOrDefaultAsync(r => r.Id == requestId);
+
+            if (request == null || request.Listing?.SellerUserId != user.Id)
+            {
+                TempData["Error"] = "Request not found or unauthorized.";
+                return RedirectToAction(nameof(MyRequests));
+            }
+
+            request.Status = "Rejected";
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Request rejected.";
+            return RedirectToAction(nameof(MyRequests));
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            // Find listing from database
-            var listing = await _context.MarketplaceListings.FindAsync(id);
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
 
-            if (listing != null)
+            var listing = await _context.MarketplaceListings.FindAsync(id);
+            if (listing == null) return RedirectToAction(nameof(Index));
+
+            // Only the seller can delete
+            if (listing.SellerUserId != user.Id)
             {
-                // Soft delete or hard delete? Requirement says "Marks as sold/expired" in comment, but code was removing it.
-                // Let's stick to removing it for now to match previous behavior, or maybe just update status if that's preferred.
-                // The previous code was `_listingsList.Remove(listing)`, so it was a hard delete from the list.
-                // I will replicate hard delete for now.
-                _context.MarketplaceListings.Remove(listing);
-                await _context.SaveChangesAsync();
+                TempData["Error"] = "You can only delete your own listings.";
+                return RedirectToAction(nameof(Index));
             }
 
-            // Redirect to marketplace list view
-            return RedirectToAction(nameof(Index));
-        }
+            _context.MarketplaceListings.Remove(listing);
+            await _context.SaveChangesAsync();
 
-        private bool ListingExists(int id)
-        {
-            return _context.MarketplaceListings.Any(e => e.Id == id);
+            TempData["Success"] = "Listing deleted.";
+            return RedirectToAction(nameof(Index));
         }
     }
 }

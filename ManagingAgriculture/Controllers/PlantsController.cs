@@ -542,6 +542,7 @@ namespace ManagingAgriculture.Controllers
                 {
                     if (plant.CompanyId != user.CompanyId) return Forbid();
                     
+                    // Only Boss can delete company plants; Employee/Manager cannot
                     if (User.IsInRole("Employee") || User.IsInRole("Manager")) 
                     {
                         TempData["Error"] = "Only the Boss can delete plants.";
@@ -550,6 +551,7 @@ namespace ManagingAgriculture.Controllers
                 }
                 else
                 {
+                    // Non-company users (User, SystemAdmin, ITSupport) can delete their own plants
                     if (plant.OwnerUserId != user.Id) return Forbid();
                 }
 
