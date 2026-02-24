@@ -187,12 +187,18 @@
                 var name = "User";
                 if (!string.IsNullOrEmpty(email) && email.Contains("@"))
                 {
-                    name = email.Split('@')[0];
-                    if (name.Length > 0)
-                    {
-                        name = char.ToUpper(name[0]) + name.Substring(1);
-                    }
+                    var raw = email.Split('@')[0];
+                    name = raw.Length > 0 ? char.ToUpper(raw[0]) + raw.Substring(1) : raw;
                 }
+
+                if (User.IsInRole("SystemAdmin") || email.Equals("admin@gmail.com", StringComparison.OrdinalIgnoreCase))
+                    name = "Admin";
+                else if (User.IsInRole("ITSupport"))
+                    name = "IT Support";
+                else if (User.IsInRole("Boss"))
+                    name = "Boss";
+                else if (User.IsInRole("Manager"))
+                    name = "Manager";
                 <span style="font-size: 14px; font-weight: 600;">Welcome @name!</span>
                 <a href="@Url.Action("Index", "Dashboard")" class="btn-dashboard">Dashboard</a>
 

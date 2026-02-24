@@ -262,6 +262,16 @@ namespace ManagingAgriculture.Controllers
                 if (user.CompanyId == null && machinery.OwnerUserId != user.Id)
                     return Forbid();
 
+                // Prevent delete if it's currently on sale
+                var isListed = await _context.MarketplaceListings
+                    .AnyAsync(ml => ml.MachineryId == machinery.Id && ml.ListingStatus == "Active");
+
+                if (isListed)
+                {
+                    TempData["Error"] = "Cannot delete machinery that is currently listed for sale in the marketplace. Please cancel the listing first.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 _context.Machinery.Remove(machinery);
                 await _context.SaveChangesAsync();
             }

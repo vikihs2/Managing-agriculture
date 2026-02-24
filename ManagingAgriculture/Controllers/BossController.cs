@@ -283,6 +283,17 @@ namespace ManagingAgriculture.Controllers
             return Ok();
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CancelTask(int taskId)
+        {
+            var task = await _context.TaskAssignments.FindAsync(taskId);
+            if (task == null) return NotFound();
+            
+            _context.TaskAssignments.Remove(task);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
         // --- DEMOTION ---
         [HttpPost]
         public async Task<IActionResult> DemoteStaff(string userId)
@@ -308,12 +319,12 @@ namespace ManagingAgriculture.Controllers
         [HttpGet]
         public async Task<IActionResult> GetLeaveDates(string userId)
         {
-            var leaves = await _context.LeaveRecords
-                .Where(l => l.UserId == userId)
+            var leaves = await _context.LeaveRequests
+                .Where(l => l.UserId == userId && l.Status != "Rejected")
                 .Select(l => new {
-                    title = "Leave",
+                    title = "", // Removed text
                     start = l.LeaveDate.ToString("yyyy-MM-dd"),
-                    color = "#dc3545", // Red for leave
+                    color = l.Status == "Approved" ? "#dc3545" : "#ffffff", // Red if approved, white if pending
                     display = "background"
                 })
                 .ToListAsync();

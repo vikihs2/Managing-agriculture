@@ -281,9 +281,11 @@
                         badge = '<span class="badge bg-success float-end">Completed</span>';
                     } else if (task.isCompletedByEmployee) {
                         badge = '<span class="badge bg-warning float-end">Waiting Approval</span>';
-                        action = `<button class="btn btn-sm btn-outline-success mt-2" onclick="approveTask(${task.id})">Approve</button>`;
+                        action = `<button class="btn btn-sm btn-outline-success mt-2 me-1" onclick="approveTask(${task.id})">Approve</button>` +
+                                 `<button class="btn btn-sm btn-outline-danger mt-2" onclick="cancelTask(${task.id})">Cancel</button>`;
                     } else {
                         badge = '<span class="badge bg-secondary float-end">In Progress</span>';
+                        action = `<button class="btn btn-sm btn-outline-danger mt-2" onclick="cancelTask(${task.id})">Cancel Task</button>`;
                     }
                     
                     let item = `
@@ -307,10 +309,20 @@
     }
     
     function approveTask(taskId) {
+        if(!confirm('Approve this completed task?')) return;
         fetch('/Boss/ApproveTask?taskId=' + taskId, { method: 'POST' })
             .then(res => {
                 if(res.ok) {
-                    // Refresh
+                    openTaskModal(document.getElementById('taskModalUserId').value, document.getElementById('taskModalUserName').innerText);
+                }
+            });
+    }
+
+    function cancelTask(taskId) {
+        if(!confirm('Are you sure you want to cancel and delete this task?')) return;
+        fetch('/Boss/CancelTask?taskId=' + taskId, { method: 'POST' })
+            .then(res => {
+                if(res.ok) {
                     openTaskModal(document.getElementById('taskModalUserId').value, document.getElementById('taskModalUserName').innerText);
                 }
             });

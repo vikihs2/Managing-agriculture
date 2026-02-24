@@ -61,38 +61,19 @@
                     <span asp-validation-for="EngineHours" class="text-danger"></span>
                 </div>
 
-                <!-- Condition -->
-                <div class="mb-3">
-                    <label asp-for="ConditionStatus" class="form-label fw-bold">Condition</label>
-                    <input asp-for="ConditionStatus" class="form-control" type="text" placeholder="e.g. Good" required />
-                    <span asp-validation-for="ConditionStatus" class="text-danger"></span>
-                </div>
 
                 <!-- Listing Type and Pricing -->
                 <hr class="my-4" />
-                <h5 class="mb-3">Listing Type &amp; Pricing</h5>
+                <h5 class="mb-3">Price</h5>
 
-                <div class="mb-3">
-                    <label asp-for="ListingType" class="form-label fw-bold">I want to:</label>
-                    <select asp-for="ListingType" class="form-control" id="listingType">
-                        <option value="">-- Select Option --</option>
-                        <option value="Sale">Sell only</option>
-                        <option value="Rent">Rent only</option>
-                        <option value="Both">Sell and/or Rent</option>
-                    </select>
-                    <span asp-validation-for="ListingType" class="text-danger"></span>
-                </div>
+                <!-- We force it to be Sale -->
+                <input type="hidden" asp-for="ListingType" value="Sale" />
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-12 mb-3">
                         <label asp-for="SalePrice" class="form-label fw-bold">Sale Price ($)</label>
                         <input asp-for="SalePrice" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" />
                         <span asp-validation-for="SalePrice" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="RentalPricePerDay" class="form-label fw-bold">Daily Rental Price ($)</label>
-                        <input asp-for="RentalPricePerDay" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" />
-                        <span asp-validation-for="RentalPricePerDay" class="text-danger"></span>
                     </div>
                 </div>
 

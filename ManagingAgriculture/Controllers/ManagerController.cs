@@ -151,6 +151,23 @@ namespace ManagingAgriculture.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelTask(int taskId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var task = await _context.TaskAssignments.FindAsync(taskId);
+            if (task != null && task.CompanyId == user.CompanyId && task.AssignedByUserId == user.Id)
+            {
+                _context.TaskAssignments.Remove(task);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Task canceled and removed.";
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RequestLeave(DateTime leaveDate, string? reason)
         {
             var user = await _userManager.GetUserAsync(User);

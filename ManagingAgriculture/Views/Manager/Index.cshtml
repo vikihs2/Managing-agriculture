@@ -116,6 +116,14 @@
                                                 <button type="submit" class="btn btn-sm btn-outline-success">Approve</button>
                                             </form>
                                         }
+                                        @if (!task.IsApprovedByBoss && task.AssignedByUserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                                        {
+                                            <form asp-action="CancelTask" method="post" style="display:inline;" onsubmit="return confirm('Cancel and delete this task?');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="taskId" value="@task.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                            </form>
+                                        }
                                     </td>
                                 </tr>
                             }

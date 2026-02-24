@@ -148,12 +148,25 @@ namespace ManagingAgriculture.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Load machinery owned by this user (or company)
+            // Exclude busy machinery
+            var busyMachineryIds = await _context.TaskAssignments
+                .Where(t => t.AssignedMachineryId.HasValue && !t.IsApprovedByBoss)
+                .Select(t => t.AssignedMachineryId!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            // Also exclude machinery that is already listed for sale/rent actively
+            var activeListedMachineryIds = await _context.MarketplaceListings
+                .Where(ml => ml.ListingStatus == "Active" && ml.MachineryId.HasValue)
+                .Select(ml => ml.MachineryId!.Value)
+                .Distinct()
+                .ToListAsync();
+
             List<Machinery> machinery;
             if (user.CompanyId != null)
-                machinery = await _context.Machinery.Where(m => m.CompanyId == user.CompanyId).ToListAsync();
+                machinery = await _context.Machinery.Where(m => m.CompanyId == user.CompanyId && !busyMachineryIds.Contains(m.Id) && !activeListedMachineryIds.Contains(m.Id)).ToListAsync();
             else
-                machinery = await _context.Machinery.Where(m => m.OwnerUserId == user.Id).ToListAsync();
+                machinery = await _context.Machinery.Where(m => m.OwnerUserId == user.Id && !busyMachineryIds.Contains(m.Id) && !activeListedMachineryIds.Contains(m.Id)).ToListAsync();
 
             ViewBag.UserMachinery = machinery;
 
@@ -208,6 +221,8 @@ namespace ManagingAgriculture.Controllers
                 {
                     listing.ItemName = string.IsNullOrWhiteSpace(listing.ItemName) ? mach.Name : listing.ItemName;
                     listing.Description = string.IsNullOrWhiteSpace(listing.Description) ? $"{mach.Type} - {mach.Name}" : listing.Description;
+                    listing.ConditionStatus = mach.Status;
+                    listing.EngineHours = mach.EngineHours ?? 0;
                     listing.MachineryId = mach.Id;
                 }
             }
