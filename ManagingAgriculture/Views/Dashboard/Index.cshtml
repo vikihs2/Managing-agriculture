@@ -21,15 +21,7 @@
         </div>
         
         <div class="d-flex gap-2 align-items-center">
-            <a asp-controller="Inbox" asp-action="Index" class="btn btn-warning text-dark position-relative">
-                <i class="fas fa-envelope"></i> Check Inbox
-                @if (ViewBag.UnreadMessageCount != null && (int)ViewBag.UnreadMessageCount > 0)
-                {
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                        @ViewBag.UnreadMessageCount
-                    </span>
-                }
-            </a>
+
 
             @if (User.IsInRole("Boss"))
             {

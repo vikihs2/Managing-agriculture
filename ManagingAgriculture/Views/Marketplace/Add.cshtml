@@ -56,9 +56,16 @@
 
                 <!-- Engine Hours -->
                 <div class="mb-3">
-                    <label asp-for="EngineHours" class="form-label fw-bold">Engine Hours (h) <small class="text-muted fw-normal">(optional)</small></label>
-                    <input asp-for="EngineHours" class="form-control" type="number" step="0.1" min="0" placeholder="e.g., 123.4" />
+                    <label asp-for="EngineHours" class="form-label fw-bold">Engine Hours (h)</label>
+                    <input asp-for="EngineHours" class="form-control" type="number" step="0.1" min="0" placeholder="e.g., 123.4" required />
                     <span asp-validation-for="EngineHours" class="text-danger"></span>
+                </div>
+
+                <!-- Condition -->
+                <div class="mb-3">
+                    <label asp-for="ConditionStatus" class="form-label fw-bold">Condition</label>
+                    <input asp-for="ConditionStatus" class="form-control" type="text" placeholder="e.g. Good" required />
+                    <span asp-validation-for="ConditionStatus" class="text-danger"></span>
                 </div>
 
                 <!-- Listing Type and Pricing -->
@@ -140,8 +147,12 @@
                     if (data) {
                         var nameEl = document.querySelector('[name="ItemName"]');
                         var descEl = document.querySelector('[name="Description"]');
+                        var conditionEl = document.querySelector('[name="ConditionStatus"]');
+                        var hoursEl = document.querySelector('[name="EngineHours"]');
                         if (nameEl && !nameEl.value) nameEl.value = data.name;
                         if (descEl && !descEl.value) descEl.value = data.type + ' - ' + data.name;
+                        if (conditionEl && !conditionEl.value) conditionEl.value = data.status;
+                        if (hoursEl && (!hoursEl.value || hoursEl.value == 0)) hoursEl.value = data.engineHours || 0;
                     }
                 })
                 .catch(()=>{});

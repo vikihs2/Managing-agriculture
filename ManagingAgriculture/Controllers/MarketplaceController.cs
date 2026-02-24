@@ -185,8 +185,10 @@ namespace ManagingAgriculture.Controllers
             listing.SellerName = GetDisplayName(user);
             listing.Category = "Equipment"; // Only machinery sold here
 
-            // Remove SellerName from ModelState since we override it
+            // Remove internal or auto-filled fields from ModelState validation
             ModelState.Remove("SellerName");
+            ModelState.Remove("Category");
+            ModelState.Remove("ConditionStatus"); // Auto-filled physically or not required if rent-only
 
             if (!ModelState.IsValid)
             {

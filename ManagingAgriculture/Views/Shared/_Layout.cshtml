@@ -42,8 +42,8 @@
                     welcomeName = raw.Length > 0 ? char.ToUpper(raw[0]) + raw.Substring(1) : raw;
                 }
 
-                // Special role names
-                if (User.IsInRole("SystemAdmin") || welcomeName.Equals("admin", StringComparison.OrdinalIgnoreCase))
+                // Special role names (always force exactly "Admin" for system admins)
+                if (User.IsInRole("SystemAdmin") || userEmail.Equals("admin@gmail.com", StringComparison.OrdinalIgnoreCase))
                     welcomeName = "Admin";
                 else if (User.IsInRole("ITSupport"))
                     welcomeName = "IT Support";

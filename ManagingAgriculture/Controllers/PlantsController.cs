@@ -165,10 +165,10 @@ namespace ManagingAgriculture.Controllers
                 if (seedResource == null || seedResource.Quantity < requiredAmount)
                 {
                     decimal have = seedResource?.Quantity ?? 0;
-                    string unit = seedResource?.Unit ?? "kg";
+                    // Force the message to mention kg to be standard
                     TempData["Error"] = $"Not enough seeds to plant {model.CropType} on a {field.SizeInDecars} decar field. " +
-                        $"Need {requiredAmount:N1} {unit} of seeds, but only have {have:N1} {unit}. " +
-                        $"Please add more seeds in the Resources section (Category: Seed).";
+                        $"Need {seedRequirementKg:N1} kg of seeds, but only have {have:N1} {(seedResource?.Unit ?? "kg")}. " +
+                        $"Please add more seeds in the Resources section (Category: Seed, Unit: kg).";
                     ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
                     ViewBag.Fields = await GetUserFields(currentUser, unoccupiedOnly: true);
                     return View(model);

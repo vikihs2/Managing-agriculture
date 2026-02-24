@@ -335,12 +335,7 @@
                 height: 500,
                 events: '/Boss/GetLeaveDates?userId=' + userId,
                 dateClick: function(info) {
-                    // Toggle Leave
-                    fetch(`/Boss/ToggleLeaveDate?userId=${userId}&date=${info.dateStr}`, { method: 'POST' })
-                        .then(res => res.json())
-                        .then(d => {
-                             calendar.refetchEvents(); // Refresh events
-                        });
+                    // Boss Dashboard calendar is view-only (info only)
                 }
             });
             calendar.render();
