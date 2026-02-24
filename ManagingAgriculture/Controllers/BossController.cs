@@ -262,8 +262,14 @@ namespace ManagingAgriculture.Controllers
                 .Distinct()
                 .ToListAsync();
 
+            var activeListedMachineryIds = await _context.MarketplaceListings
+                .Where(ml => ml.ListingStatus == "Active" && ml.MachineryId.HasValue)
+                .Select(ml => ml.MachineryId!.Value)
+                .Distinct()
+                .ToListAsync();
+
             var available = await _context.Machinery
-                .Where(m => m.CompanyId == currentUser.CompanyId && !busyMachineryIds.Contains(m.Id))
+                .Where(m => m.CompanyId == currentUser.CompanyId && !busyMachineryIds.Contains(m.Id) && !activeListedMachineryIds.Contains(m.Id))
                 .Select(m => new { m.Id, m.Name, m.Type, m.Status })
                 .ToListAsync();
 

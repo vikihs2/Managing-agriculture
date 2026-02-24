@@ -152,32 +152,47 @@ namespace ManagingAgriculture.Controllers
 
             if (seedRequirementKg > 0)
             {
-                // Find a Seed resource that matches (look for any resource in Seed category)
-                var seedResource = await _context.Resources
+                var seedResources = await _context.Resources
                     .Where(r =>
                         r.Category == "Seed" &&
                         (r.CompanyId == currentUser.CompanyId || (r.CompanyId == null && r.OwnerUserId == currentUser.Id)))
-                    .FirstOrDefaultAsync();
+                    .ToListAsync();
 
-                // Convert requirement to the unit stored in the resource
-                decimal requiredAmount = ConvertSeedRequirement(seedRequirementKg, seedResource?.Unit ?? "kg");
+                decimal totalSeedsKg = seedResources.Sum(r => ConvertSeedToKg(r.Quantity, r.Unit));
 
-                if (seedResource == null || seedResource.Quantity < requiredAmount)
+                if (totalSeedsKg < seedRequirementKg)
                 {
-                    decimal have = seedResource?.Quantity ?? 0;
-                    // Force the message to mention kg to be standard
                     TempData["Error"] = $"Not enough seeds to plant {model.CropType} on a {field.SizeInDecars} decar field. " +
-                        $"Need {seedRequirementKg:N1} kg of seeds, but only have {have:N1} {(seedResource?.Unit ?? "kg")}. " +
-                        $"Please add more seeds in the Resources section (Category: Seed, Unit: kg).";
+                        $"Need {seedRequirementKg:N1} kg of seeds, but you only have {totalSeedsKg:N1} kg equivalent in your Stock. " +
+                        $"Please add more seeds in the Resources section.";
                     ViewBag.CropCategories = ManagingAgriculture.Services.CropDataService.CropCategories;
                     ViewBag.Fields = await GetUserFields(currentUser, unoccupiedOnly: true);
                     return View(model);
                 }
 
-                // Deduct seeds from resource
-                seedResource.Quantity -= requiredAmount;
-                seedResource.UpdatedDate = System.DateTime.Now;
-                _context.Resources.Update(seedResource);
+                // Deduct from seeds
+                decimal remainingToDeductKg = seedRequirementKg;
+                foreach(var sr in seedResources.OrderBy(r => r.Quantity))
+                {
+                     decimal currentKg = ConvertSeedToKg(sr.Quantity, sr.Unit);
+                     if (currentKg <= 0) continue;
+
+                     if (currentKg <= remainingToDeductKg)
+                     {
+                         remainingToDeductKg -= currentKg;
+                         sr.Quantity = 0;
+                     }
+                     else
+                     {
+                         decimal unitAmountToDeduct = ConvertKgToSeedUnit(remainingToDeductKg, sr.Unit);
+                         sr.Quantity -= unitAmountToDeduct;
+                         remainingToDeductKg = 0;
+                     }
+                     sr.UpdatedDate = System.DateTime.Now;
+                     _context.Resources.Update(sr);
+
+                     if (remainingToDeductKg <= 0) break;
+                }
             }
 
             // Use CurrentTrackingDate if provided, otherwise use today
@@ -314,11 +329,27 @@ namespace ManagingAgriculture.Controllers
         }
 
         /// <summary>
+        /// Converts seed quantity from its unit to kg.
+        /// </summary>
+        private decimal ConvertSeedToKg(decimal quantity, string unit)
+        {
+            return (unit?.ToLower() ?? "kg") switch
+            {
+                "g"     => quantity / 1000m,
+                "tons"  => quantity * 1000m,
+                "bags"  => quantity * 25m,
+                "boxes" => quantity * 10m,
+                "pieces" or "units" => quantity / 10m,
+                _       => quantity
+            };
+        }
+
+        /// <summary>
         /// Converts seed requirement from kg to the unit stored in the resource.
         /// </summary>
-        private decimal ConvertSeedRequirement(decimal requirementKg, string unit)
+        private decimal ConvertKgToSeedUnit(decimal requirementKg, string unit)
         {
-            return unit switch
+            return (unit?.ToLower() ?? "kg") switch
             {
                 "g"     => requirementKg * 1000m,
                 "tons"  => requirementKg / 1000m,

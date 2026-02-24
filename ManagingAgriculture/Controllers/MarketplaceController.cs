@@ -254,6 +254,15 @@ namespace ManagingAgriculture.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Prevent editing if someone requested to buy it
+            var hasRequests = await _context.MarketplacePurchaseRequests
+                .AnyAsync(r => r.ListingId == id && (r.Status == "Pending" || r.Status == "Approved"));
+            if (hasRequests)
+            {
+                TempData["Error"] = "You cannot edit this listing because there are active purchase requests.";
+                return RedirectToAction(nameof(Index));
+            }
+
             return View(listing);
         }
 
@@ -273,6 +282,15 @@ namespace ManagingAgriculture.Controllers
             if (existing.SellerUserId != user.Id)
             {
                 TempData["Error"] = "You can only edit your own listings.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Prevent editing if someone requested to buy it
+            var hasRequests = await _context.MarketplacePurchaseRequests
+                .AnyAsync(r => r.ListingId == id && (r.Status == "Pending" || r.Status == "Approved"));
+            if (hasRequests)
+            {
+                TempData["Error"] = "You cannot edit this listing because there are active purchase requests.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -407,21 +425,38 @@ namespace ManagingAgriculture.Controllers
             var buyer = request.BuyerUser;
             if (buyer == null) buyer = await _userManager.FindByIdAsync(request.BuyerUserId);
 
-            // Create machinery record for the buyer
-            var machine = new Machinery
+            // Create or update machinery record for the buyer
+            if (request.Listing.MachineryId.HasValue)
             {
-                Name = request.Listing.ItemName,
-                Type = request.Listing.Category,
-                Status = request.Listing.ConditionStatus,
-                EngineHours = request.Listing.EngineHours,
-                PurchasePrice = request.Listing.SalePrice,
-                PurchaseDate = DateTime.UtcNow,
-                CompanyId = buyer?.CompanyId,
-                OwnerUserId = buyer?.CompanyId == null ? request.BuyerUserId : null,
-                CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow
-            };
-            _context.Machinery.Add(machine);
+                var existingMachine = await _context.Machinery.FindAsync(request.Listing.MachineryId.Value);
+                if (existingMachine != null)
+                {
+                    existingMachine.CompanyId = buyer?.CompanyId;
+                    existingMachine.OwnerUserId = buyer?.CompanyId == null ? request.BuyerUserId : null;
+                    existingMachine.PurchasePrice = request.Listing.SalePrice;
+                    existingMachine.PurchaseDate = DateTime.UtcNow;
+                    existingMachine.UpdatedDate = DateTime.UtcNow;
+                    existingMachine.Status = request.Listing.ConditionStatus;
+                    existingMachine.EngineHours = request.Listing.EngineHours;
+                }
+            }
+            else
+            {
+                var machine = new Machinery
+                {
+                    Name = request.Listing.ItemName,
+                    Type = request.Listing.Category,
+                    Status = request.Listing.ConditionStatus,
+                    EngineHours = request.Listing.EngineHours,
+                    PurchasePrice = request.Listing.SalePrice,
+                    PurchaseDate = DateTime.UtcNow,
+                    CompanyId = buyer?.CompanyId,
+                    OwnerUserId = buyer?.CompanyId == null ? request.BuyerUserId : null,
+                    CreatedDate = DateTime.UtcNow,
+                    UpdatedDate = DateTime.UtcNow
+                };
+                _context.Machinery.Add(machine);
+            }
 
             // Approve this request
             request.Status = "Approved";
@@ -483,6 +518,15 @@ namespace ManagingAgriculture.Controllers
             if (listing.SellerUserId != user.Id)
             {
                 TempData["Error"] = "You can only delete your own listings.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Prevent deletion if someone requested to buy it
+            var hasRequests = await _context.MarketplacePurchaseRequests
+                .AnyAsync(r => r.ListingId == id && (r.Status == "Pending" || r.Status == "Approved"));
+            if (hasRequests)
+            {
+                TempData["Error"] = "You cannot delete this listing because there are active purchase requests.";
                 return RedirectToAction(nameof(Index));
             }
 
