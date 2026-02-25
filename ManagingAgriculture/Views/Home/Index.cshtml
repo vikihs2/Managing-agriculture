@@ -15,11 +15,11 @@
         *{box-sizing:border-box;margin:0;padding:0}
         body{font-family: 'Helvetica Neue', Arial, sans-serif;color:#222;background:#fff}
     /* Avoid re-declaring ViewData inside head */
-        /* Home-only: Login and Register buttons (boxes use green shades, text is white) */
-        .btn-login{background:var(--accent-green);color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;text-decoration:none;font-size:14px;font-weight:600;transition:background 0.25s ease}
-        .btn-login:hover{background:var(--brand-green)}
-        .btn-register{background:var(--brand-green);color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;text-decoration:none;font-size:14px;font-weight:600;transition:background 0.25s ease}
-        .btn-register:hover{background:var(--brand-green-dark)}
+        /* Home-only: Login and Register buttons */
+        .btn-login{background:var(--accent-green);color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
+        .btn-login:hover{background:var(--brand-green);}
+        .btn-register{background:#ff9800;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
+        .btn-register:hover{background:#e68a00;}
 
         /* Hero */
         .hero{height:560px;background:url('/images/homeBackground.webp') center/cover no-repeat;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:72px;gap:8px}
@@ -28,9 +28,8 @@
         .hero h1{font-family: 'Georgia', serif;font-size:46px;line-height:1.04;font-weight:900;margin-bottom:12px;text-shadow:0 10px 20px rgba(0,0,0,0.6)}
         .hero h1 .accent{color:var(--accent-green);display:inline-block}
         .hero p{max-width:760px;margin:0 auto 18px;color:rgba(255,255,255,0.96);font-size:16px;text-shadow:0 6px 18px rgba(0,0,0,0.5)}
-        .hero .btn-primary{background:var(--accent-green);color:#fff;border:none;padding:10px 16px;border-radius:8px}
-        .hero .btn-primary:hover{background:var(--brand-green-dark)}
-        .btn-login{color:#fff;padding:8px 12px;text-decoration:none}
+        .hero .btn-primary{background:transparent;color:var(--accent-green);border:2px solid var(--accent-green);padding:8px 14px;border-radius:6px;transition:all 0.2s ease;}
+        .hero .btn-primary:hover{background:var(--accent-green);color:#fff;}
 
         /* Center stats: stacked below hero text */
         .stats{position:relative;left:auto;top:auto;transform:none;display:flex;gap:48px;z-index:2;justify-content:center;align-items:center;width:100%;margin-top:18px}
@@ -39,8 +38,8 @@
         .stat .label{opacity:0.9;margin-top:6px;font-size:12px}
         /* Hero CTA */
         .hero-cta{display:flex;justify-content:center;margin-top:14px;z-index:2;width:100%}
-        .hero-cta a{background:var(--accent-green);color:#fff;border:none;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;font-size:15px;font-weight:600;transition:background 0.25s ease}
-        .hero-cta a:hover{background:var(--brand-green-dark)}
+        .hero-cta a{background:var(--accent-green);color:#fff;border:none;padding:8px 14px;border-radius:6px;text-decoration:none;display:inline-block;font-size:14px;font-weight:600;transition:all 0.25s ease}
+        .hero-cta a:hover{background:var(--brand-green);}
 
         /* Content cards */
         .content-section{padding:48px 16px;background:#fbf7f2}
@@ -57,23 +56,22 @@
         .cta h2{font-family:'Georgia',serif;font-size:24px;margin-bottom:12px}
         .cta p{opacity:0.9;margin-bottom:16px}
         .cta .cta-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-        /* CTA: green theme on home (use accent green so it matches Add buttons) */
-        .cta .btn-primary{background:var(--accent-green);border:none;padding:10px 16px;border-radius:6px;color:#fff;text-decoration:none;font-size:14px}
-        .cta .btn-primary:hover{background:var(--brand-green)}
-        .cta .btn-outline{background:#ff9800;border:none;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-size:14px}
-        .cta .btn-outline:hover{background:#c77b0c;color:#fff}
+        .cta .btn-primary{background:var(--accent-green);border:none;padding:6px 12px;border-radius:6px;color:#fff;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
+        .cta .btn-primary:hover{background:var(--brand-green);}
+        .cta .btn-outline{background:transparent;border:1px solid #ff9800;color:#ff9800;padding:6px 12px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
+        .cta .btn-outline:hover{background:#ff9800;color:#fff;}
 
         /* hero accent color for last words */
         .hero h1 .accent{ color: var(--accent-green); }
 
         /* style Dashboard JUST on the home page (keep Sign out unstyled) */
         .top-nav .nav-right .btn-outline, .top-nav .nav-right .btn-dashboard {
-            background: var(--brand-green);
-            border-color: var(--brand-green);
+            background: var(--accent-green);
+            border: none;
             color: #fff;
         }
-        .top-nav .nav-right .btn-outline:hover, .top-nav .nav-right .btn-dashboard:hover{
-            background: var(--brand-green-dark);
+        .top-nav .nav-right .btn-outline:hover, .top-nav .nav-right .btn-dashboard:hover {
+            background: var(--brand-green);
         }
 
         /* Top nav */
@@ -82,41 +80,39 @@
         .logo-badge{width:42px;height:42px;border-radius:8px;background:rgba(255,255,255,0.06);display:inline-flex;align-items:center;justify-content:center;font-size:20px}
         .brand{font-weight:700;color:#fff;margin-left:0;display:inline-flex;align-items:center;justify-content:center}
         .nav-right{display:flex;align-items:center;gap:12px}
-        .btn-login{background:transparent;border:none;color:#fff;font-size:14px;padding:8px 12px;cursor:pointer}
-        .btn-login:hover{background:rgba(255,255,255,0.2);border-radius:6px}
 
         /* Home page: style Dashboard to match sign out (only on home) */
         .top-nav .nav-right .btn-outline, .top-nav .nav-right .btn-dashboard {
-            background: var(--brand-green);
-            border-color: var(--brand-green);
+            background: var(--accent-green);
+            border: none;
             color: #fff;
-            padding: 10px 16px;
-            font-size: 14px;
+            padding: 6px 12px;
+            font-size: 13px;
             font-weight: 600;
-            border-radius: 8px;
-            transition: background 0.25s ease;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.25s ease;
         }
         .top-nav .nav-right .btn-outline:hover, .top-nav .nav-right .btn-dashboard:hover{
-            background: var(--brand-green-dark);
+            background: var(--brand-green);
         }
 
         /* Home-specific: style Sign out button (orange) and remove default outline */
         .top-nav .nav-right .btn-signout {
-            background: #ff9800; /* orange */
-            border: none;
-            color: #fff;
-            padding: 10px 16px;
-            font-size: 14px;
+            background: transparent;
+            border: 1px solid #ff9800; /* orange */
+            color: #ff9800;
+            padding: 6px 12px;
+            font-size: 13px;
             font-weight: 600;
-            border-radius: 8px;
+            border-radius: 6px;
             outline: none;
-            box-shadow: none;
             cursor: pointer;
-            transition: background 0.25s ease;
+            transition: all 0.25s ease;
         }
         .top-nav .nav-right .btn-signout:hover {
-            background: #c77b0c; /* darker orange */
-            color:#fff;
+            background: #ff9800;
+            color: #fff;
         }
 
         /* CTA dark strip */
@@ -125,11 +121,11 @@
         .cta p{opacity:0.9;margin-bottom:16px}
         .cta .cta-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
         /* CTA: use accent green for primary buttons (match Add) */
-        .cta .btn-primary{background:var(--accent-green);border:none;padding:12px 24px;border-radius:8px;color:#fff;text-decoration:none;font-size:15px;font-weight:600;transition:background 0.25s ease}
-        .cta .btn-primary:hover{background:var(--brand-green)}
+        .cta .btn-primary{background:var(--accent-green);border:none;padding:8px 16px;border-radius:6px;color:#fff;text-decoration:none;font-size:14px;font-weight:600;transition:all 0.25s ease}
+        .cta .btn-primary:hover{background:var(--brand-green);}
         /* Contact button: same style as Sign out (filled orange) */
-        .cta .btn-outline{background:#ff9800;border:none;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:600;transition:background 0.25s ease}
-        .cta .btn-outline:hover{background:#c77b0c;color:#fff}
+        .cta .btn-outline{background:transparent;border:1px solid #ff9800;color:#ff9800;padding:6px 12px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
+        .cta .btn-outline:hover{background:#ff9800;color:#fff;}
 
         /* Footer */
         .site-footer{background:#1c1711;color:rgba(255,255,255,0.95);padding:28px 16px}

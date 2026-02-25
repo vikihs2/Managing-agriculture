@@ -235,4 +235,4 @@ C:\Users\Viktor\Desktop\diplomna\Managing-agriculture\ManagingAgriculture\obj\De
 C:\Users\Viktor\Desktop\diplomna\Managing-agriculture\ManagingAgriculture\obj\Debug\net9.0\ManagingAgriculture.pdb
 C:\Users\Viktor\Desktop\diplomna\Managing-agriculture\ManagingAgriculture\obj\Debug\net9.0\ManagingAgriculture.genruntimeconfig.cache
 C:\Users\Viktor\Desktop\diplomna\Managing-agriculture\ManagingAgriculture\obj\Debug\net9.0\ref\ManagingAgriculture.dll
-C:\Users\Viktor\Desktop\diplomna\Managing-agriculture\ManagingAgriculture\obj\Debug\net9.0\compressed\o22admou70-mrofg4z8m8.gz
+C:\Users\Viktor\Desktop\diplomna\Managing-agriculture\ManagingAgriculture\obj\Debug\net9.0\compressed\o22admou70-tc49d8hnw0.gz
