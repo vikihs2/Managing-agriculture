@@ -16,8 +16,8 @@
         body{font-family: 'Helvetica Neue', Arial, sans-serif;color:#222;background:#fff}
     /* Avoid re-declaring ViewData inside head */
         /* Home-only: Login and Register buttons */
-        .btn-login{background:var(--accent-green);color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
-        .btn-login:hover{background:var(--brand-green);}
+        .btn-login{background:#74c69d;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
+        .btn-login:hover{background:#58b385;}
         .btn-register{background:#ff9800;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
         .btn-register:hover{background:#e68a00;}
 
@@ -28,18 +28,18 @@
         .hero h1{font-family: 'Georgia', serif;font-size:46px;line-height:1.04;font-weight:900;margin-bottom:12px;text-shadow:0 10px 20px rgba(0,0,0,0.6)}
         .hero h1 .accent{color:var(--accent-green);display:inline-block}
         .hero p{max-width:760px;margin:0 auto 18px;color:rgba(255,255,255,0.96);font-size:16px;text-shadow:0 6px 18px rgba(0,0,0,0.5)}
-        .hero .btn-primary{background:transparent;color:var(--accent-green);border:2px solid var(--accent-green);padding:8px 14px;border-radius:6px;transition:all 0.2s ease;}
-        .hero .btn-primary:hover{background:var(--accent-green);color:#fff;}
+        .hero .btn-primary{background:#74c69d;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:13px;font-weight:600;transition:all 0.2s ease;text-decoration:none;display:inline-block;}
+        .hero .btn-primary:hover{background:#58b385;}
 
         /* Center stats: stacked below hero text */
         .stats{position:relative;left:auto;top:auto;transform:none;display:flex;gap:48px;z-index:2;justify-content:center;align-items:center;width:100%;margin-top:18px}
         .stat{color:#fff;text-align:center;min-width:120px}
         .stat .num{font-size:22px;font-weight:800}
         .stat .label{opacity:0.9;margin-top:6px;font-size:12px}
-        /* Hero CTA */
+        /* Hero CTA - Bigger "Start Tracking Now" */
         .hero-cta{display:flex;justify-content:center;margin-top:14px;z-index:2;width:100%}
-        .hero-cta a{background:var(--accent-green);color:#fff;border:none;padding:8px 14px;border-radius:6px;text-decoration:none;display:inline-block;font-size:14px;font-weight:600;transition:all 0.25s ease}
-        .hero-cta a:hover{background:var(--brand-green);}
+        .hero-cta a{background:#74c69d;color:#fff;border:none;padding:12px 28px;border-radius:12px;text-decoration:none;display:inline-block;font-size:18px;font-weight:700;transition:all 0.25s ease;box-shadow: 0 4px 15px rgba(0,0,0,0.2);}
+        .hero-cta a:hover{background:#58b385;transform: translateY(-2px);box-shadow: 0 6px 20px rgba(0,0,0,0.3);}
 
         /* Content cards */
         .content-section{padding:48px 16px;background:#fbf7f2}
@@ -56,22 +56,22 @@
         .cta h2{font-family:'Georgia',serif;font-size:24px;margin-bottom:12px}
         .cta p{opacity:0.9;margin-bottom:16px}
         .cta .cta-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-        .cta .btn-primary{background:var(--accent-green);border:none;padding:6px 12px;border-radius:6px;color:#fff;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
-        .cta .btn-primary:hover{background:var(--brand-green);}
-        .cta .btn-outline{background:transparent;border:1px solid #ff9800;color:#ff9800;padding:6px 12px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
-        .cta .btn-outline:hover{background:#ff9800;color:#fff;}
+        .cta .btn-primary{background:#74c69d;border:none;padding:6px 12px;border-radius:6px;color:#fff;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
+        .cta .btn-primary:hover{background:#58b385;}
+        .cta .btn-outline{background:#ff9800;border:none;color:#fff;padding:6px 12px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
+        .cta .btn-outline:hover{background:#e68a00;}
 
         /* hero accent color for last words */
         .hero h1 .accent{ color: var(--accent-green); }
 
         /* style Dashboard JUST on the home page (keep Sign out unstyled) */
         .top-nav .nav-right .btn-outline, .top-nav .nav-right .btn-dashboard {
-            background: var(--accent-green);
+            background:#74c69d;
             border: none;
             color: #fff;
         }
         .top-nav .nav-right .btn-outline:hover, .top-nav .nav-right .btn-dashboard:hover {
-            background: var(--brand-green);
+            background:#58b385;
         }
 
         /* Top nav */
@@ -83,7 +83,7 @@
 
         /* Home page: style Dashboard to match sign out (only on home) */
         .top-nav .nav-right .btn-outline, .top-nav .nav-right .btn-dashboard {
-            background: var(--accent-green);
+            background:#74c69d;
             border: none;
             color: #fff;
             padding: 6px 12px;
@@ -94,14 +94,14 @@
             transition: all 0.25s ease;
         }
         .top-nav .nav-right .btn-outline:hover, .top-nav .nav-right .btn-dashboard:hover{
-            background: var(--brand-green);
+            background:#58b385;
         }
 
         /* Home-specific: style Sign out button (orange) and remove default outline */
         .top-nav .nav-right .btn-signout {
-            background: transparent;
-            border: 1px solid #ff9800; /* orange */
-            color: #ff9800;
+            background: #ff9800; /* orange */
+            border: none;
+            color: #fff;
             padding: 6px 12px;
             font-size: 13px;
             font-weight: 600;
@@ -111,7 +111,7 @@
             transition: all 0.25s ease;
         }
         .top-nav .nav-right .btn-signout:hover {
-            background: #ff9800;
+            background: #e68a00;
             color: #fff;
         }
 
@@ -120,15 +120,15 @@
         .cta h2{font-family:'Georgia',serif;font-size:24px;margin-bottom:12px}
         .cta p{opacity:0.9;margin-bottom:16px}
         .cta .cta-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-        /* CTA: use accent green for primary buttons (match Add) */
-        .cta .btn-primary{background:var(--accent-green);border:none;padding:8px 16px;border-radius:6px;color:#fff;text-decoration:none;font-size:14px;font-weight:600;transition:all 0.25s ease}
-        .cta .btn-primary:hover{background:var(--brand-green);}
-        /* Contact button: same style as Sign out (filled orange) */
-        .cta .btn-outline{background:transparent;border:1px solid #ff9800;color:#ff9800;padding:6px 12px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
-        .cta .btn-outline:hover{background:#ff9800;color:#fff;}
+        /* CTA: use specific green for primary buttons (match "Better Yields") */
+        .cta .btn-primary{background:#74c69d;border:none;padding:6px 12px;border-radius:6px;color:#fff;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
+        .cta .btn-primary:hover{background:#58b385;}
+        /* Contact button: same style as Register button (filled orange) */
+        .cta .btn-outline{background:#ff9800;border:none;color:#fff;padding:6px 12px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;transition:all 0.25s ease}
+        .cta .btn-outline:hover{background:#e68a00;}
 
         /* Footer */
-        .site-footer{background:#1c1711;color:rgba(255,255,255,0.95);padding:28px 16px}
+        .site-footer{background:#1c1711;color:rgba(255,255,255,0.95);padding:28px 16px;border-top:1px solid rgba(255,255,255,0.15)}
         .footer-inner{max-width:1100px;margin:0 auto;display:flex;gap:20px;flex-wrap:wrap}
         .footer-col{flex:1;min-width:160px}
         .footer-col h4{color:#fff;margin-bottom:10px}
