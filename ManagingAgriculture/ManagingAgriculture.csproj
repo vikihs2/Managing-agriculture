@@ -17,4 +17,12 @@
     <PackageReference Include="System.IO.Ports" Version="10.0.1" />
   </ItemGroup>
 
+  <!-- Exclude the test project folder so the main project doesn't try to compile test files -->
+  <ItemGroup>
+    <Compile Remove="ManagingAgriculture.Tests\**" />
+    <Content Remove="ManagingAgriculture.Tests\**" />
+    <EmbeddedResource Remove="ManagingAgriculture.Tests\**" />
+    <None Remove="ManagingAgriculture.Tests\**" />
+  </ItemGroup>
+
 </Project>
