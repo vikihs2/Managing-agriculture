@@ -67,26 +67,16 @@
             fetch('/Sensors/GetWaterLevel')
                 .then(r => r.json())
                 .then(d => {
-                    const el = document.getElementById('humidityValue');
                     const percent = Math.min(100, Math.round((d.value / 1023) * 100));
-                    
-                    if (percent > 0) {
-                       el.innerText = percent + '%';
-                       el.classList.remove('text-danger', 'fs-6');
-                    }
-                    
+                    document.getElementById('humidityValue').innerText = percent + '%';
                     document.getElementById('lastUpdate').innerText = new Date().toLocaleTimeString();
-                    document.querySelector('.status-online').innerHTML = '<i class="fas fa-circle text-success"></i> Online';
                 })
                 .catch(() => {
-                    const el = document.getElementById('humidityValue');
-                    el.innerText = 'Arduino Not Connected';
-                    el.classList.add('text-danger', 'fs-6');
-                    document.querySelector('.status-online').innerHTML = '<i class="fas fa-circle text-danger"></i> Offline';
+                    document.getElementById('humidityValue').innerText = '--%';
                 });
         }
 
-        setInterval(updateSensor, 2000); 
+        setInterval(updateSensor, 300);
     </script>
 
     <script>

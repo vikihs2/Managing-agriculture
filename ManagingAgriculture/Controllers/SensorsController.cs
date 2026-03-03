@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using ManagingAgriculture.Services;
 
 namespace ManagingAgriculture.Controllers
 {
+    [Authorize]
     public class SensorsController : Controller
     {
         private readonly ArduinoService _arduino;
@@ -14,10 +16,7 @@ namespace ManagingAgriculture.Controllers
 
         public IActionResult Index()
         {
-            if (!_arduino.IsConnected())
-            {
-                return View("Disconnected");
-            }
+            ViewData["Title"] = "Soil Humidity Monitor";
             return View();
         }
 
