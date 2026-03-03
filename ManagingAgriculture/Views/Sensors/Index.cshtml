@@ -27,11 +27,23 @@
         <div class="soil-stat-card">
             <div class="soil-stat-header">
                 <span>Temperature</span>
+                <select id="weatherCity" class="form-select form-select-sm" style="width: 130px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; padding: 2px 5px;">
+                     <option value="42.6977,23.3219">Sofia</option>
+                     <option value="42.1438,24.7497">Plovdiv</option>
+                     <option value="43.2046,27.9105">Varna</option>
+                     <option value="42.5061,27.4678">Burgas</option>
+                     <option value="43.8564,25.9708">Ruse</option>
+                     <option value="42.4328,25.6419">Stara Zagora</option>
+                     <option value="43.4170,24.6067">Pleven</option>
+                     <option value="42.6858,26.3292">Sliven</option>
+                     <option value="43.5667,27.8333">Dobrich</option>
+                     <option value="43.2706,26.9229">Shumen</option>
+                </select>
                 <i class="fas fa-thermometer-half"></i>
             </div>
-            <div class="soil-stat-value">25.1°C</div>
-            <div class="soil-stat-sub">Mock data</div>
-            <span class="soil-badge normal">Normal</span>
+            <div class="soil-stat-value" id="weather-temp">--°C</div>
+            <div class="soil-stat-sub" id="weather-condition">Fetching weather...</div>
+            <span class="soil-badge normal">Outdoor</span>
         </div>
 
         <div class="soil-stat-card">
@@ -129,6 +141,49 @@
                     intersect: false
                 }
             }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const citySelect = document.getElementById('weatherCity');
+            
+            function loadWeather() {
+                const [lat, lng] = citySelect.value.split(',');
+                
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`)
+                .then(response => response.json())
+                .then(data => {
+                    if(data.current_weather) {
+                        const w = data.current_weather;
+                        document.getElementById('weather-temp').innerText = w.temperature + "°C";
+                        
+                        let condition = 'Clear';
+                        if(w.weathercode > 3) condition = 'Cloudy';
+                        if(w.weathercode > 50) condition = 'Rainy';
+                        if(w.weathercode > 70) condition = 'Snowy';
+
+                        document.getElementById('weather-condition').innerText = condition + " in " + citySelect.options[citySelect.selectedIndex].text;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('weather-temp').innerText = "Error";
+                    document.getElementById('weather-condition').innerText = "Failed to load";
+                });
+            }
+
+            const savedCity = localStorage.getItem('weatherCitySetting');
+            if (savedCity) {
+                citySelect.value = savedCity;
+            }
+
+            citySelect.addEventListener('change', function() {
+                localStorage.setItem('weatherCitySetting', this.value);
+                loadWeather();
+            });
+
+            loadWeather();
+            // Refresh weather every 10 minutes
+            setInterval(loadWeather, 600000);
         });
     </script>
 }
