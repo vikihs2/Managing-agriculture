@@ -17,6 +17,12 @@ namespace ManagingAgriculture.Controllers
         public IActionResult Index()
         {
             ViewData["Title"] = "Soil Humidity Monitor";
+            
+            if (!_arduino.IsConnected())
+            {
+                return View("Disconnected");
+            }
+            
             return View();
         }
 
