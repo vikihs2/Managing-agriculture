@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "hqLd7aHoEUw=",
+  "dgSpecHash": "op7E1NodK5A=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Viktor\\Desktop\\dp\\Managing-agriculture\\ManagingAgriculture\\ManagingAgriculture.csproj",
+  "projectFilePath": "C:\\Users\\Viktor\\Desktop\\testDP\\Managing-agriculture\\ManagingAgriculture\\ManagingAgriculture.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Viktor\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\Viktor\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
