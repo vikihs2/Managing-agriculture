@@ -6,12 +6,13 @@ using ManagingAgriculture.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    if (connectionString?.StartsWith("postgres://") == true)
+    if (connectionString?.StartsWith("postgres") == true && connectionString.Contains("://"))
     {
         var databaseUri = new Uri(connectionString);
         var userInfo = databaseUri.UserInfo.Split(':');
