@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "op7E1NodK5A=",
+  "dgSpecHash": "iTwuyendsOI=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Viktor\\Desktop\\testDP\\Managing-agriculture\\ManagingAgriculture\\ManagingAgriculture.csproj",
+  "projectFilePath": "C:\\Users\\Viktor\\Desktop\\dp2\\Managing-agriculture\\ManagingAgriculture\\ManagingAgriculture.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Viktor\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\Viktor\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
@@ -55,6 +55,8 @@
     "C:\\Users\\Viktor\\.nuget\\packages\\microsoft.sqlserver.server\\1.0.0\\microsoft.sqlserver.server.1.0.0.nupkg.sha512",
     "C:\\Users\\Viktor\\.nuget\\packages\\microsoft.win32.systemevents\\6.0.0\\microsoft.win32.systemevents.6.0.0.nupkg.sha512",
     "C:\\Users\\Viktor\\.nuget\\packages\\mono.texttemplating\\3.0.0\\mono.texttemplating.3.0.0.nupkg.sha512",
+    "C:\\Users\\Viktor\\.nuget\\packages\\npgsql\\9.0.0\\npgsql.9.0.0.nupkg.sha512",
+    "C:\\Users\\Viktor\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\9.0.0\\npgsql.entityframeworkcore.postgresql.9.0.0.nupkg.sha512",
     "C:\\Users\\Viktor\\.nuget\\packages\\runtime.android-arm.runtime.native.system.io.ports\\10.0.1\\runtime.android-arm.runtime.native.system.io.ports.10.0.1.nupkg.sha512",
     "C:\\Users\\Viktor\\.nuget\\packages\\runtime.android-arm64.runtime.native.system.io.ports\\10.0.1\\runtime.android-arm64.runtime.native.system.io.ports.10.0.1.nupkg.sha512",
     "C:\\Users\\Viktor\\.nuget\\packages\\runtime.android-x64.runtime.native.system.io.ports\\10.0.1\\runtime.android-x64.runtime.native.system.io.ports.10.0.1.nupkg.sha512",
