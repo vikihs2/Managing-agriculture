@@ -48,22 +48,28 @@ using (var scope = app.Services.CreateScope())
     try 
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-        
+        Console.WriteLine($"[DB INIT] Provider: {context.Database.ProviderName}");
+
         if (context.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL")
         {
-            // For Render (PostgreSQL): Ignore SQL Server migrations and just create the tables seamlessly
+            Console.WriteLine("[DB INIT] Using EnsureCreated for PostgreSQL (Render)");
             await context.Database.EnsureCreatedAsync();
         }
         else
         {
-            // For Local (SQL Server): Apply migrations normally
+            Console.WriteLine("[DB INIT] Using Migrate for SQL Server (Local)");
             await context.Database.MigrateAsync();
         }
 
+        Console.WriteLine("[DB INIT] Starting seeding...");
         await DbInitializer.Initialize(services);
+        Console.WriteLine("[DB INIT] Seeding completed successfully!");
     }
     catch (Exception ex)
     {
+        Console.WriteLine($"[DB INIT ERROR] {ex.Message}");
+        if (ex.InnerException != null) Console.WriteLine($"[DB INIT INNER] {ex.InnerException.Message}");
+        
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while seeding the database.");
     }
