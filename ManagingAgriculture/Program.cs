@@ -16,7 +16,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     {
         var databaseUri = new Uri(connectionString);
         var userInfo = databaseUri.UserInfo.Split(':');
-        connectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Database={databaseUri.AbsolutePath[1..]};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Prefer;Trust Server Certificate=true;";
+        var port = databaseUri.Port > 0 ? databaseUri.Port : 5432;
+        connectionString = $"Host={databaseUri.Host};Port={port};Database={databaseUri.AbsolutePath[1..]};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Prefer;Trust Server Certificate=true;";
     }
     options.UseNpgsql(connectionString);
 });
