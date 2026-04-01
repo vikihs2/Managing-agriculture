@@ -18,8 +18,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         var userInfo = databaseUri.UserInfo.Split(':');
         var port = databaseUri.Port > 0 ? databaseUri.Port : 5432;
         connectionString = $"Host={databaseUri.Host};Port={port};Database={databaseUri.AbsolutePath[1..]};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Prefer;Trust Server Certificate=true;";
+        options.UseNpgsql(connectionString);
     }
-    options.UseNpgsql(connectionString);
+    else
+    {
+        // Use SQL Server for local development
+        options.UseSqlServer(connectionString);
+    }
 });
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -43,7 +48,18 @@ using (var scope = app.Services.CreateScope())
     try 
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-        await context.Database.MigrateAsync();
+        
+        if (context.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL")
+        {
+            // For Render (PostgreSQL): Ignore SQL Server migrations and just create the tables seamlessly
+            await context.Database.EnsureCreatedAsync();
+        }
+        else
+        {
+            // For Local (SQL Server): Apply migrations normally
+            await context.Database.MigrateAsync();
+        }
+
         await DbInitializer.Initialize(services);
     }
     catch (Exception ex)
